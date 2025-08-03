@@ -10,12 +10,20 @@ import {
   Heading3,
   Code,
   Quote,
-  AlignLeft, // Import new icons
+  AlignLeft,
   AlignCenter,
   AlignRight,
   AlignJustify,
+  Rows, // Icon for line height
 } from 'lucide-react'
 import { Toggle } from '@/components/ui/toggle'
+import { Button } from '@/components/ui/button' // Import Button for dropdown trigger
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 type Props = {
   editor: Editor | null
@@ -98,7 +106,7 @@ export function EditorToolbar({ editor }: Props) {
       >
         <Quote className="h-4 w-4" />
       </Toggle>
-      {/* New alignment controls */}
+      {/* Alignment controls */}
       <Toggle
         size="sm"
         pressed={editor.isActive({ textAlign: 'left' })}
@@ -127,6 +135,29 @@ export function EditorToolbar({ editor }: Props) {
       >
         <AlignJustify className="h-4 w-4" />
       </Toggle>
+      {/* Line Height Dropdown */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <Rows className="h-4 w-4" />
+            <span className="sr-only">Line Height</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem onClick={() => editor.chain().focus().setTextStyle({ lineHeight: '1.2' }).run()}>
+            Compact (1.2)
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => editor.chain().focus().setTextStyle({ lineHeight: '1.5' }).run()}>
+            Normal (1.5)
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => editor.chain().focus().setTextStyle({ lineHeight: '2.0' }).run()}>
+            Spacious (2.0)
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => editor.chain().focus().unsetTextStyle().run()}>
+            Reset
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }
