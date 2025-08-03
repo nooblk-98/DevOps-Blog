@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Home, Package, Users, Settings, LayoutDashboard } from "lucide-react";
+import { Home, Package, Users, Settings, LayoutDashboard, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -31,6 +31,10 @@ export const Sidebar = () => {
             <NavLink to="/admin/categories" className={navLinkClasses}>
               <Users className="h-4 w-4" />
               Categories
+            </NavLink>
+            <NavLink to="/admin/comments" className={navLinkClasses}>
+              <MessageSquare className="h-4 w-4" />
+              Comments
             </NavLink>
             <NavLink to="/admin/settings" className={navLinkClasses}>
               <Settings className="h-4 w-4" />

@@ -15,6 +15,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { AdminDashboard } from "@/pages/admin/Dashboard";
 import { AdminPosts } from "@/pages/admin/Posts";
 import { AdminCategories } from "@/pages/admin/Categories";
+import { AdminComments } from "@/pages/admin/Comments";
 import { AdminSettings } from "@/pages/admin/Settings";
 import { SettingsProvider } from "@/context/SettingsContext";
 
@@ -45,6 +46,7 @@ const App = () => (
                   <Route index element={<AdminDashboard />} />
                   <Route path="posts" element={<AdminPosts />} />
                   <Route path="categories" element={<AdminCategories />} />
+                  <Route path="comments" element={<AdminComments />} />
                   <Route path="settings" element={<AdminSettings />} />
                 </Route>
 
