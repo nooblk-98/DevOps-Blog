@@ -134,4 +134,8 @@
   .prose code::after {
     content: "" !important;
   }
+
+  .prose img {
+    @apply rounded-lg;
+  }
 }
