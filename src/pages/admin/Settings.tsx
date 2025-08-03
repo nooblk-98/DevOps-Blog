@@ -25,12 +25,27 @@ interface SocialSharingSettings {
   enabled: boolean;
 }
 
+interface SocialLinks {
+  github: { url: string; enabled: boolean };
+  whatsapp: { url: string; enabled: boolean };
+  linkedin: { url: string; enabled: boolean };
+  facebook: { url: string; enabled: boolean };
+  instagram: { url: string; enabled: boolean };
+}
+
 export const AdminSettings = () => {
   const { refreshSettings } = useSettings();
   const [bannerSettings, setBannerSettings] = useState<BannerSettings>({ title: '', subtitle: '', image_url: '' });
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({ name: '', logo_url: '' });
   const [aboutContent, setAboutContent] = useState<string>('');
   const [socialSharingSettings, setSocialSharingSettings] = useState<SocialSharingSettings>({ enabled: true });
+  const [socialLinks, setSocialLinks] = useState<SocialLinks>({
+    github: { url: '', enabled: false },
+    whatsapp: { url: '', enabled: false },
+    linkedin: { url: '', enabled: false },
+    facebook: { url: '', enabled: false },
+    instagram: { url: '', enabled: false },
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -53,6 +68,9 @@ export const AdminSettings = () => {
 
         const social = data.find(s => s.key === 'social_sharing')?.value;
         if (social) setSocialSharingSettings(social);
+
+        const links = data.find(s => s.key === 'social_links')?.value;
+        if (links) setSocialLinks(links);
       }
       setLoading(false);
     };
@@ -78,8 +96,12 @@ export const AdminSettings = () => {
       .from('settings')
       .upsert({ key: 'social_sharing', value: socialSharingSettings }, { onConflict: 'key' });
 
-    if (bannerError || siteError || aboutError || socialError) {
-      showError(bannerError?.message || siteError?.message || aboutError?.message || socialError?.message || 'An error occurred while saving.');
+    const { error: socialLinksError } = await supabase
+      .from('settings')
+      .upsert({ key: 'social_links', value: socialLinks }, { onConflict: 'key' });
+
+    if (bannerError || siteError || aboutError || socialError || socialLinksError) {
+      showError(bannerError?.message || siteError?.message || aboutError?.message || socialError?.message || socialLinksError?.message || 'An error occurred while saving.');
     } else {
       showSuccess('Settings updated successfully!');
       refreshSettings();
@@ -98,6 +120,16 @@ export const AdminSettings = () => {
 
   const handleSocialSharingToggle = (checked: boolean) => {
     setSocialSharingSettings({ enabled: checked });
+  };
+
+  const handleSocialLinkChange = (platform: keyof SocialLinks, field: 'url' | 'enabled', value: string | boolean) => {
+    setSocialLinks(prev => ({
+      ...prev,
+      [platform]: {
+        ...prev[platform],
+        [field]: value,
+      },
+    }));
   };
 
   if (loading) {
@@ -192,6 +224,36 @@ export const AdminSettings = () => {
                 />
                 <Label htmlFor="social-sharing-toggle">Enable Social Sharing Buttons</Label>
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Social Media Links</CardTitle>
+              <CardDescription>Manage your social media presence in the footer.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {Object.entries(socialLinks).map(([platform, { url, enabled }]) => (
+                <div key={platform} className="flex items-center space-x-4">
+                  <div className="flex-1 space-y-2">
+                    <Label htmlFor={`${platform}-url`}>{platform.charAt(0).toUpperCase() + platform.slice(1)} URL</Label>
+                    <Input
+                      id={`${platform}-url`}
+                      value={url}
+                      onChange={(e) => handleSocialLinkChange(platform as keyof SocialLinks, 'url', e.target.value)}
+                      placeholder={`https://${platform}.com/yourprofile`}
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id={`${platform}-enabled`}
+                      checked={enabled}
+                      onCheckedChange={(checked) => handleSocialLinkChange(platform as keyof SocialLinks, 'enabled', checked)}
+                    />
+                    <Label htmlFor={`${platform}-enabled`}>Enabled</Label>
+                  </div>
+                </div>
+              ))}
             </CardContent>
           </Card>
           

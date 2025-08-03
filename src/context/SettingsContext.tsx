@@ -16,11 +16,20 @@ interface SocialSharingSettings {
   enabled: boolean;
 }
 
+interface SocialLinks {
+  github: { url: string; enabled: boolean };
+  whatsapp: { url: string; enabled: boolean };
+  linkedin: { url: string; enabled: boolean };
+  facebook: { url: string; enabled: boolean };
+  instagram: { url: string; enabled: boolean };
+}
+
 interface Settings {
   site: SiteSettings;
   banner: BannerSettings;
   aboutPageContent: string;
   socialSharing: SocialSharingSettings;
+  socialLinks: SocialLinks; // New social links property
   loading: boolean;
   refreshSettings: () => void;
 }
@@ -29,7 +38,14 @@ const defaultSettings: Settings = {
   site: { name: 'DevOps Zone', logo_url: '' },
   banner: { title: 'Welcome to DevOps Zone', subtitle: 'Your one-stop destination for DevOps tutorials and best practices.', image_url: '' },
   aboutPageContent: '',
-  socialSharing: { enabled: true }, // Default to enabled
+  socialSharing: { enabled: true },
+  socialLinks: { // Default social links
+    github: { url: '', enabled: false },
+    whatsapp: { url: '', enabled: false },
+    linkedin: { url: '', enabled: false },
+    facebook: { url: '', enabled: false },
+    instagram: { url: '', enabled: false },
+  },
   loading: true,
   refreshSettings: () => {},
 };
@@ -51,7 +67,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const newSettings: Partial<Pick<Settings, 'site' | 'banner' | 'aboutPageContent' | 'socialSharing'>> = {};
+    const newSettings: Partial<Pick<Settings, 'site' | 'banner' | 'aboutPageContent' | 'socialSharing' | 'socialLinks'>> = {};
     for (const setting of data) {
       if (setting.key === 'site') {
         newSettings.site = setting.value as SiteSettings;
@@ -61,6 +77,8 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         newSettings.aboutPageContent = setting.value as string;
       } else if (setting.key === 'social_sharing') {
         newSettings.socialSharing = setting.value as SocialSharingSettings;
+      } else if (setting.key === 'social_links') { // Fetch new social links
+        newSettings.socialLinks = setting.value as SocialLinks;
       }
     }
     
@@ -70,6 +88,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       banner: newSettings.banner || prev.banner,
       aboutPageContent: newSettings.aboutPageContent || prev.aboutPageContent,
       socialSharing: newSettings.socialSharing || prev.socialSharing,
+      socialLinks: newSettings.socialLinks || prev.socialLinks, // Update social links
       loading: false,
     }));
   };
