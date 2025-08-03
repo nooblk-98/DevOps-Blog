@@ -45,21 +45,14 @@ const Index = () => {
       
       const formattedPinned = (pinnedData || []).map(p => ({...p, link: `/posts/${p.slug}`}));
       setPinnedPosts(formattedPinned);
-      const pinnedPostIds = formattedPinned.map(p => p.id);
 
-      // Now fetch recent posts, excluding the pinned ones
-      let recentPostsQuery = supabase
+      // Now fetch the 9 most recent posts, regardless of pinned status
+      const { data: recentData, error: recentError } = await supabase
         .from('posts')
         .select('*')
         .eq('status', 'published')
         .order('created_at', { ascending: false })
         .limit(9);
-
-      if (pinnedPostIds.length > 0) {
-        recentPostsQuery = recentPostsQuery.not('id', 'in', `(${pinnedPostIds.join(',')})`);
-      }
-
-      const { data: recentData, error: recentError } = await recentPostsQuery;
 
       if (recentError) {
         console.error('Error fetching recent posts:', recentError);
