@@ -7,8 +7,10 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useSettings } from "@/context/SettingsContext";
 
 export const Header = () => {
+  const { site } = useSettings();
   const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
     `transition-colors hover:text-foreground ${
       isActive ? "text-foreground" : "text-muted-foreground"
@@ -33,8 +35,8 @@ export const Header = () => {
                     to="/"
                     className="flex items-center gap-2 text-lg font-semibold"
                   >
-                    <MountainIcon className="h-6 w-6" />
-                    <span>DevOps Zone</span>
+                    {site.logo_url ? <img src={site.logo_url} alt={site.name} className="h-6 w-auto" /> : <MountainIcon className="h-6 w-6" />}
+                    <span>{site.name}</span>
                   </Link>
                   <NavLink
                     to="/"
@@ -59,9 +61,9 @@ export const Header = () => {
             </Sheet>
           </div>
           <Link to="/" className="hidden md:flex items-center space-x-2">
-            <MountainIcon className="h-6 w-6" />
+            {site.logo_url ? <img src={site.logo_url} alt={site.name} className="h-6 w-auto" /> : <MountainIcon className="h-6 w-6" />}
             <span className="font-bold">
-              DevOps Zone
+              {site.name}
             </span>
           </Link>
         </div>

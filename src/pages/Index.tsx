@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSettings } from "@/context/SettingsContext";
 
 interface Post {
   id: number;
@@ -17,21 +18,15 @@ interface Post {
   slug: string;
 }
 
-interface BannerSettings {
-  title: string;
-  subtitle: string;
-  image_url: string;
-}
-
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [bannerSettings, setBannerSettings] = useState<BannerSettings | null>(null);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+  const { banner: bannerSettings, loading: loadingSettings } = useSettings();
 
   useEffect(() => {
     const fetchPosts = async () => {
-      setLoading(true);
+      setLoadingPosts(true);
       const { data, error } = await supabase
         .from('posts')
         .select('*')
@@ -43,25 +38,10 @@ const Index = () => {
         const formattedPosts = data.map(p => ({...p, link: `/tutorials/${p.slug}`}))
         setPosts(formattedPosts || []);
       }
-      setLoading(false);
+      setLoadingPosts(false);
     };
     
-    const fetchBannerSettings = async () => {
-      const { data, error } = await supabase
-        .from('settings')
-        .select('value')
-        .eq('key', 'banner')
-        .single();
-
-      if (error) {
-        console.error('Error fetching banner settings:', error);
-      } else if (data) {
-        setBannerSettings(data.value as BannerSettings);
-      }
-    };
-
     fetchPosts();
-    fetchBannerSettings();
   }, []);
 
   const categories = ["All", ...Array.from(new Set(posts.map((post) => post.category)))];
@@ -90,10 +70,10 @@ const Index = () => {
           <div className="relative container mx-auto px-6 md:px-8">
             <div className="text-center">
               <h1 className="text-4xl md:text-5xl font-bold text-white">
-                {bannerSettings?.title || 'Welcome to DevOps Zone'}
+                {bannerSettings?.title || 'Welcome'}
               </h1>
               <p className="mt-4 text-lg text-gray-200">
-                {bannerSettings?.subtitle || 'Your one-stop destination for DevOps tutorials and best practices.'}
+                {bannerSettings?.subtitle || ''}
               </p>
             </div>
           </div>
@@ -125,7 +105,7 @@ const Index = () => {
                 />
               </div>
             </div>
-            {loading ? (
+            {loadingPosts ? (
               <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-96 w-full" />)}
               </div>

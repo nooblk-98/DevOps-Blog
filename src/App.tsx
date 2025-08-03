@@ -14,6 +14,7 @@ import { AdminDashboard } from "@/pages/admin/Dashboard";
 import { AdminPosts } from "@/pages/admin/Posts";
 import { AdminCategories } from "@/pages/admin/Categories";
 import { AdminSettings } from "@/pages/admin/Settings";
+import { SettingsProvider } from "@/context/SettingsContext";
 
 const queryClient = new QueryClient();
 
@@ -27,25 +28,27 @@ const App = () => (
   <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/tutorials/:slug" element={<PostPage />} />
-            <Route path="/login" element={<Login />} />
-            
-            <Route path="/admin" element={<AdminRoutes />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="posts" element={<AdminPosts />} />
-              <Route path="categories" element={<AdminCategories />} />
-              <Route path="settings" element={<AdminSettings />} />
-            </Route>
+        <SettingsProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/tutorials/:slug" element={<PostPage />} />
+              <Route path="/login" element={<Login />} />
+              
+              <Route path="/admin" element={<AdminRoutes />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="posts" element={<AdminPosts />} />
+                <Route path="categories" element={<AdminCategories />} />
+                <Route path="settings" element={<AdminSettings />} />
+              </Route>
 
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </SettingsProvider>
       </TooltipProvider>
     </QueryClientProvider>
   </ThemeProvider>
