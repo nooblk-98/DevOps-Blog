@@ -1,5 +1,6 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
+import Image from '@tiptap/extension-image'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { TextAlign } from '@tiptap/extension-text-align'
 import { TextStyle } from '@tiptap/extension-text-style'
@@ -23,7 +24,9 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
     extensions: [
       StarterKit.configure({
         codeBlock: false,
+        image: false, // Disable the default image extension
       }),
+      Image, // Add the image extension manually
       CodeBlockLowlight.configure({
         lowlight,
       }),
