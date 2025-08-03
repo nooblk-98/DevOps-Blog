@@ -1,5 +1,6 @@
 import { MountainIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ThemeToggle } from "./theme-toggle";
 
 export const Header = () => {
   return (
@@ -9,17 +10,20 @@ export const Header = () => {
           <MountainIcon className="h-6 w-6" />
           <span className="text-xl font-bold">DevOps Zone</span>
         </Link>
-        <nav className="hidden md:flex items-center gap-6">
-          <Link to="/" className="hover:text-gray-400">
-            Home
-          </Link>
-          <Link to="/tutorials" className="hover:text-gray-400">
-            Tutorials
-          </Link>
-          <Link to="/about" className="hover:text-gray-400">
-            About
-          </Link>
-        </nav>
+        <div className="flex items-center gap-4">
+          <nav className="hidden md:flex items-center gap-6">
+            <Link to="/" className="hover:text-gray-400">
+              Home
+            </Link>
+            <Link to="/tutorials" className="hover:text-gray-400">
+              Tutorials
+            </Link>
+            <Link to="/about" className="hover:text-gray-400">
+              About
+            </Link>
+          </nav>
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );
