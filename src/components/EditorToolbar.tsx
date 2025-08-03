@@ -16,6 +16,8 @@ import {
   AlignJustify,
   Rows,
   Image as ImageIcon,
+  Palette,
+  Highlighter,
 } from 'lucide-react'
 import { Toggle } from '@/components/ui/toggle'
 import { Button } from '@/components/ui/button'
@@ -25,7 +27,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { ImageUploadDialog } from './ImageUploadDialog'
 
 type Props = {
@@ -34,6 +36,8 @@ type Props = {
 
 export function EditorToolbar({ editor }: Props) {
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
+  const textColorInputRef = useRef<HTMLInputElement>(null);
+  const highlightColorInputRef = useRef<HTMLInputElement>(null);
 
   if (!editor) {
     return null
@@ -92,6 +96,43 @@ export function EditorToolbar({ editor }: Props) {
         >
           <Strikethrough className="h-4 w-4" />
         </Toggle>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => textColorInputRef.current?.click()}
+          className="w-8 h-8 p-0"
+          title="Text Color"
+        >
+          <Palette className="h-4 w-4" />
+        </Button>
+        <input
+          type="color"
+          ref={textColorInputRef}
+          className="w-0 h-0 p-0 border-0 absolute -z-10"
+          onInput={(e) => editor.chain().focus().setColor((e.target as HTMLInputElement).value).run()}
+          value={editor.getAttributes('textStyle').color || '#000000'}
+        />
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => highlightColorInputRef.current?.click()}
+          className="w-8 h-8 p-0"
+          title="Highlight Color"
+        >
+          <Highlighter className="h-4 w-4" />
+        </Button>
+        <input
+          type="color"
+          ref={highlightColorInputRef}
+          className="w-0 h-0 p-0 border-0 absolute -z-10"
+          onInput={(e) => editor.chain().focus().toggleHighlight({ color: (e.target as HTMLInputElement).value }).run()}
+          value={editor.getAttributes('highlight').color || '#ffff00'}
+        />
+
         <Toggle
           size="sm"
           pressed={editor.isActive('bulletList')}
