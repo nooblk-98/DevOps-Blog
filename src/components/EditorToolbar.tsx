@@ -1,4 +1,4 @@
-import { type Editor } from '@tiptap/react'
+import { useEditor } from '@tiptap/react'
 import {
   Bold,
   Strikethrough,
@@ -17,7 +17,7 @@ import {
   Rows, // Icon for line height
 } from 'lucide-react'
 import { Toggle } from '@/components/ui/toggle'
-import { Button } from '@/components/ui/button' // Import Button for dropdown trigger
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 type Props = {
-  editor: Editor | null
+  editor: ReturnType<typeof useEditor>
 }
 
 export function EditorToolbar({ editor }: Props) {
@@ -144,16 +144,16 @@ export function EditorToolbar({ editor }: Props) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuItem onClick={() => editor.chain().focus().setTextStyle({ lineHeight: '1.2' }).run()}>
+          <DropdownMenuItem onClick={() => editor.chain().focus().setMark('textStyle', { lineHeight: '1.2' }).run()}>
             Compact (1.2)
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().setTextStyle({ lineHeight: '1.5' }).run()}>
+          <DropdownMenuItem onClick={() => editor.chain().focus().setMark('textStyle', { lineHeight: '1.5' }).run()}>
             Normal (1.5)
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().setTextStyle({ lineHeight: '2.0' }).run()}>
+          <DropdownMenuItem onClick={() => editor.chain().focus().setMark('textStyle', { lineHeight: '2.0' }).run()}>
             Spacious (2.0)
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().unsetTextStyle('lineHeight').run()}>
+          <DropdownMenuItem onClick={() => editor.chain().focus().unsetMark('textStyle').run()}>
             Reset
           </DropdownMenuItem>
         </DropdownMenuContent>
