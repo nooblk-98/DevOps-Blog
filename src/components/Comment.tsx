@@ -1,22 +1,15 @@
 import { useState } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { CommentForm } from './CommentForm';
 import { formatDistanceToNow } from 'date-fns';
-import { useAuth } from '@/context/AuthContext';
-
-interface Profile {
-  id: string;
-  full_name: string;
-  avatar_url: string;
-}
 
 interface CommentData {
   id: number;
   content: string;
   created_at: string;
   parent_id: number | null;
-  profiles: Profile;
+  author_name: string;
   children?: CommentData[];
 }
 
@@ -27,9 +20,7 @@ interface CommentProps {
 }
 
 export const Comment = ({ comment, postId, onReplyAdded }: CommentProps) => {
-  const { session } = useAuth();
   const [showReplyForm, setShowReplyForm] = useState(false);
-  const profile = comment.profiles;
 
   const handleReplyAdded = () => {
     setShowReplyForm(false);
@@ -37,24 +28,21 @@ export const Comment = ({ comment, postId, onReplyAdded }: CommentProps) => {
   };
 
   return (
-    <div className="flex space-x-4">
+    <div className="flex space-x-3">
       <Avatar>
-        <AvatarImage src={profile?.avatar_url} alt={profile?.full_name} />
-        <AvatarFallback>{profile?.full_name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+        <AvatarFallback>{comment.author_name?.charAt(0).toUpperCase() || 'A'}</AvatarFallback>
       </Avatar>
       <div className="flex-1">
         <div className="flex items-center space-x-2">
-          <p className="font-semibold">{profile?.full_name || 'Anonymous'}</p>
+          <p className="font-semibold">{comment.author_name || 'Anonymous'}</p>
           <p className="text-xs text-muted-foreground">
             {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
           </p>
         </div>
         <p className="mt-1 text-gray-800 dark:text-gray-300 whitespace-pre-wrap">{comment.content}</p>
-        {session && (
-          <Button variant="link" size="sm" className="p-0 h-auto mt-1" onClick={() => setShowReplyForm(!showReplyForm)}>
-            Reply
-          </Button>
-        )}
+        <Button variant="link" size="sm" className="p-0 h-auto mt-1" onClick={() => setShowReplyForm(!showReplyForm)}>
+          Reply
+        </Button>
         {showReplyForm && (
           <div className="mt-4">
             <CommentForm
