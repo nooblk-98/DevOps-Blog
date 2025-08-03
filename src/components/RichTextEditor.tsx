@@ -1,6 +1,7 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import TextAlign from '@tiptap/extension-text-align' // Import TextAlign
 import { createLowlight, common } from 'lowlight'
 import { EditorToolbar } from './EditorToolbar'
 
@@ -20,6 +21,9 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
       }),
       CodeBlockLowlight.configure({
         lowlight,
+      }),
+      TextAlign.configure({ // Configure TextAlign extension
+        types: ['heading', 'paragraph'],
       }),
     ],
     content: value,
