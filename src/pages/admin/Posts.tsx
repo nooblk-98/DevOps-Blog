@@ -361,9 +361,10 @@ const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (da
 
   useEffect(() => {
     if (post) {
+      const { categories, ...restOfPost } = post;
       setFormData({
-        ...post,
-        category_ids: post.categories.map(c => c.id.toString()),
+        ...restOfPost,
+        category_ids: categories.map(c => c.id.toString()),
       });
     } else {
       setFormData(defaultPostState);
