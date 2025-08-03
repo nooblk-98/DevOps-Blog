@@ -19,6 +19,7 @@ import {
   Palette,
   Highlighter,
   ChevronDown,
+  Terminal,
 } from 'lucide-react'
 import { Toggle } from '@/components/ui/toggle'
 import { Button } from '@/components/ui/button'
@@ -195,8 +196,17 @@ export function EditorToolbar({ editor }: Props) {
           size="sm"
           pressed={editor.isActive('codeBlock')}
           onPressedChange={() => editor.chain().focus().toggleCodeBlock().run()}
+          title="Code Block"
         >
           <Code className="h-4 w-4" />
+        </Toggle>
+        <Toggle
+          size="sm"
+          pressed={editor.isActive('code')}
+          onPressedChange={() => editor.chain().focus().toggleCode().run()}
+          title="Inline Code"
+        >
+          <Terminal className="h-4 w-4" />
         </Toggle>
         <Toggle
           size="sm"
