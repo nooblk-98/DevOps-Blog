@@ -31,6 +31,7 @@ const Index = () => {
     const fetchPosts = async () => {
       setLoadingPosts(true);
 
+      // Fetch pinned posts first
       const { data: pinnedData, error: pinnedError } = await supabase
         .from('posts')
         .select('*')
@@ -40,18 +41,25 @@ const Index = () => {
 
       if (pinnedError) {
         console.error('Error fetching pinned posts:', pinnedError);
-      } else {
-        const formattedPinned = (pinnedData || []).map(p => ({...p, link: `/posts/${p.slug}`}));
-        setPinnedPosts(formattedPinned);
       }
+      
+      const formattedPinned = (pinnedData || []).map(p => ({...p, link: `/posts/${p.slug}`}));
+      setPinnedPosts(formattedPinned);
+      const pinnedPostIds = formattedPinned.map(p => p.id);
 
-      const { data: recentData, error: recentError } = await supabase
+      // Now fetch recent posts, excluding the pinned ones
+      let recentPostsQuery = supabase
         .from('posts')
         .select('*')
-        .eq('is_pinned', false)
         .eq('status', 'published')
         .order('created_at', { ascending: false })
         .limit(9);
+
+      if (pinnedPostIds.length > 0) {
+        recentPostsQuery = recentPostsQuery.not('id', 'in', `(${pinnedPostIds.join(',')})`);
+      }
+
+      const { data: recentData, error: recentError } = await recentPostsQuery;
 
       if (recentError) {
         console.error('Error fetching recent posts:', recentError);
