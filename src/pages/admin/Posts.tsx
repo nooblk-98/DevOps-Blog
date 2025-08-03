@@ -34,12 +34,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { showError, showSuccess } from '@/utils/toast';
-import { useNavigate } from 'react-router-dom';
 import { RichTextEditor } from '@/components/RichTextEditor';
-import { CategoryManager } from '@/components/CategoryManager';
-import { SettingsManager } from '@/components/SettingsManager';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Post {
   id?: number;
@@ -55,14 +52,13 @@ interface Category {
   name: string;
 }
 
-const Admin = () => {
+export const AdminPosts = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [currentPost, setCurrentPost] = useState<Post | null>(null);
   const [postToDelete, setPostToDelete] = useState<Post | null>(null);
-  const navigate = useNavigate();
 
   const fetchPosts = async () => {
     const { data, error } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
@@ -127,28 +123,18 @@ const Admin = () => {
     setIsDialogOpen(true);
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
-  };
-
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-        <Button variant="outline" onClick={handleLogout}>Logout</Button>
+    <>
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-semibold md:text-2xl">Posts</h1>
+        <Button onClick={() => openDialog()}>Create New Post</Button>
       </div>
-
-      <Tabs defaultValue="posts">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="posts">Manage Posts</TabsTrigger>
-          <TabsTrigger value="categories">Manage Categories</TabsTrigger>
-          <TabsTrigger value="settings">Site Settings</TabsTrigger>
-        </TabsList>
-        <TabsContent value="posts">
-          <div className="flex justify-end my-4">
-            <Button onClick={() => openDialog()}>Create New Post</Button>
-          </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Manage Posts</CardTitle>
+          <CardDescription>Create, edit, and delete your blog posts.</CardDescription>
+        </CardHeader>
+        <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
@@ -170,14 +156,8 @@ const Admin = () => {
               ))}
             </TableBody>
           </Table>
-        </TabsContent>
-        <TabsContent value="categories">
-          <CategoryManager />
-        </TabsContent>
-        <TabsContent value="settings">
-          <SettingsManager />
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
         if (!isOpen) {
@@ -207,7 +187,7 @@ const Admin = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 };
 
@@ -264,5 +244,3 @@ const PostForm = ({ post, onSave, onCancel, categories }: { post: Post | null, o
     </form>
   );
 };
-
-export default Admin;

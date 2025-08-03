@@ -28,14 +28,15 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { showError, showSuccess } from '@/utils/toast';
-import { Label } from './ui/label';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Category {
   id?: number;
   name: string;
 }
 
-export const CategoryManager = () => {
+export const AdminCategories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
@@ -99,30 +100,38 @@ export const CategoryManager = () => {
   };
 
   return (
-    <div>
-      <div className="flex justify-end my-4">
+    <>
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-semibold md:text-2xl">Categories</h1>
         <Button onClick={() => openDialog()}>Create New Category</Button>
       </div>
-
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {categories.map((category) => (
-            <TableRow key={category.id}>
-              <TableCell>{category.name}</TableCell>
-              <TableCell className="text-right">
-                <Button variant="outline" size="sm" onClick={() => openDialog(category)} className="mr-2">Edit</Button>
-                <Button variant="destructive" size="sm" onClick={() => openDeleteConfirm(category)}>Delete</Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <Card>
+        <CardHeader>
+          <CardTitle>Manage Categories</CardTitle>
+          <CardDescription>Organize your posts by creating and managing categories.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {categories.map((category) => (
+                <TableRow key={category.id}>
+                  <TableCell>{category.name}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="outline" size="sm" onClick={() => openDialog(category)} className="mr-2">Edit</Button>
+                    <Button variant="destructive" size="sm" onClick={() => openDeleteConfirm(category)}>Delete</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
         if (!isOpen) {
@@ -167,6 +176,6 @@ export const CategoryManager = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 };

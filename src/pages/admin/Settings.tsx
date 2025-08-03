@@ -3,9 +3,9 @@ import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { showError, showSuccess } from '@/utils/toast';
-import { Skeleton } from './ui/skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface BannerSettings {
   title: string;
@@ -13,7 +13,7 @@ interface BannerSettings {
   image_url: string;
 }
 
-export const SettingsManager = () => {
+export const AdminSettings = () => {
   const [settings, setSettings] = useState<BannerSettings>({ title: '', subtitle: '', image_url: '' });
   const [loading, setLoading] = useState(true);
 
@@ -81,30 +81,36 @@ export const SettingsManager = () => {
   }
 
   return (
-    <Card className="mt-4">
-      <CardHeader>
-        <CardTitle>Site Settings</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSave} className="space-y-4">
-          <h3 className="text-lg font-semibold">Homepage Banner</h3>
-          <div className="space-y-2">
-            <Label htmlFor="title">Banner Title</Label>
-            <Input id="title" name="title" value={settings.title} onChange={handleChange} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="subtitle">Banner Subtitle</Label>
-            <Input id="subtitle" name="subtitle" value={settings.subtitle} onChange={handleChange} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="image_url">Banner Image URL</Label>
-            <Input id="image_url" name="image_url" value={settings.image_url} onChange={handleChange} />
-          </div>
-          <div className="flex justify-end">
-            <Button type="submit">Save Settings</Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+    <>
+      <div className="flex items-center">
+        <h1 className="text-lg font-semibold md:text-2xl">Settings</h1>
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Site Settings</CardTitle>
+          <CardDescription>Manage your site's appearance and configuration.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSave} className="space-y-4">
+            <h3 className="text-lg font-semibold">Homepage Banner</h3>
+            <div className="space-y-2">
+              <Label htmlFor="title">Banner Title</Label>
+              <Input id="title" name="title" value={settings.title} onChange={handleChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="subtitle">Banner Subtitle</Label>
+              <Input id="subtitle" name="subtitle" value={settings.subtitle} onChange={handleChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="image_url">Banner Image URL</Label>
+              <Input id="image_url" name="image_url" value={settings.image_url} onChange={handleChange} />
+            </div>
+            <div className="flex justify-end">
+              <Button type="submit">Save Settings</Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </>
   );
 };
