@@ -165,7 +165,7 @@ export const AdminPosts = () => {
         }
         setIsDialogOpen(isOpen);
       }}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto"> {/* Added max-h and overflow-y-auto */}
           <DialogHeader>
             <DialogTitle>{currentPost?.id ? 'Edit Post' : 'Create Post'}</DialogTitle>
           </DialogHeader>
