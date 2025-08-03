@@ -1,15 +1,17 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import { lowlight } from 'lowlight'
-import javascript from 'highlight.js/lib/languages/javascript'
-import typescript from 'highlight.js/lib/languages/typescript'
-import bash from 'highlight.js/lib/languages/bash'
-import sql from 'highlight.js/lib/languages/sql'
-import json from 'highlight.js/lib/languages/json'
-import css from 'highlight.js/lib/languages/css'
-import html from 'highlight.js/lib/languages/xml' // for html
+import { createLowlight } from 'lowlight'
+import javascript from 'highlight.js/es/languages/javascript.js'
+import typescript from 'highlight.js/es/languages/typescript.js'
+import bash from 'highlight.js/es/languages/bash.js'
+import sql from 'highlight.js/es/languages/sql.js'
+import json from 'highlight.js/es/languages/json.js'
+import css from 'highlight.js/es/languages/css.js'
+import html from 'highlight.js/es/languages/xml.js' // for html
 import { EditorToolbar } from './EditorToolbar'
+
+const lowlight = createLowlight()
 
 // Register languages for syntax highlighting
 lowlight.register('javascript', javascript)
