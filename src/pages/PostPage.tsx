@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -10,7 +10,6 @@ import { useSettings } from '@/context/SettingsContext';
 import { showSuccess, showError } from '@/utils/toast';
 import { CommentsSection } from '@/components/CommentsSection';
 import { Session } from '@supabase/supabase-js';
-import NotFound from './NotFound';
 
 interface Post {
   id: number;
@@ -43,7 +42,10 @@ const PostPage = () => {
 
   useEffect(() => {
     const fetchPost = async () => {
-      if (!slug) return;
+      if (!slug) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       const { data, error } = await supabase
         .from('posts')
@@ -51,11 +53,10 @@ const PostPage = () => {
         .eq('slug', slug)
         .single();
 
-      if (error) {
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
         console.error('Error fetching post:', error);
-      } else {
-        setPost(data);
       }
+      setPost(data);
       setLoading(false);
     };
     fetchPost();
@@ -123,77 +124,77 @@ const PostPage = () => {
     }
   };
 
-  if (loading || sessionLoading) {
-    return (
-      <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Header />
-        <main className="flex-1 py-12 md:py-20">
-          <div className="container mx-auto px-6 md:px-8">
-            <div className="space-y-4 max-w-3xl mx-auto">
-              <Skeleton className="h-12 w-3/4" />
-              <Skeleton className="h-6 w-1/4" />
-              <Skeleton className="h-96 w-full" />
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (!post || (post.status === 'draft' && !session)) {
-    return <NotFound />;
-  }
+  const canViewPost = post && (post.status === 'published' || (post.status === 'draft' && session));
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
       <main className="flex-1 py-12 md:py-20">
         <div className="container mx-auto px-6 md:px-8">
-          <article className="max-w-3xl mx-auto">
-            {post.status === 'draft' && session && (
-              <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-8 rounded-md" role="alert">
-                <p className="font-bold">Draft Preview</p>
-                <p>This is a draft and is not visible to the public.</p>
-              </div>
-            )}
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">{post.title}</h1>
-            <p className="text-muted-foreground mb-8">
-              Posted in {post.category} on {new Date(post.created_at).toLocaleDateString()}
-            </p>
-            {post.image_url && <img src={post.image_url} alt={post.title} className="w-full h-auto max-h-[500px] object-cover rounded-lg mb-8" />}
-            
-            {post.summary && (
-              <p className="text-xl italic text-muted-foreground my-8 border-l-4 border-border pl-4">
-                {post.summary}
-              </p>
-            )}
+          {loading || sessionLoading ? (
+            <div className="space-y-4 max-w-3xl mx-auto">
+              <Skeleton className="h-12 w-3/4" />
+              <Skeleton className="h-6 w-1/4" />
+              <Skeleton className="h-96 w-full" />
+            </div>
+          ) : canViewPost ? (
+            <>
+              <article className="max-w-3xl mx-auto">
+                {post.status === 'draft' && session && (
+                  <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-8 rounded-md" role="alert">
+                    <p className="font-bold">Draft Preview</p>
+                    <p>This is a draft and is not visible to the public.</p>
+                  </div>
+                )}
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">{post.title}</h1>
+                <p className="text-muted-foreground mb-8">
+                  Posted in {post.category} on {new Date(post.created_at).toLocaleDateString()}
+                </p>
+                {post.image_url && <img src={post.image_url} alt={post.title} className="w-full h-auto max-h-[500px] object-cover rounded-lg mb-8" />}
+                
+                {post.summary && (
+                  <p className="text-xl italic text-muted-foreground my-8 border-l-4 border-border pl-4">
+                    {post.summary}
+                  </p>
+                )}
 
-            <div
-              className="prose prose-lg dark:prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: post.description }}
-            />
-            {socialSharing.enabled && (
-              <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700 flex items-center justify-center space-x-4">
-                <span className="text-lg font-medium text-gray-700 dark:text-gray-300">Share this post:</span>
-                <Button variant="outline" size="icon" onClick={() => handleShare('twitter')}>
-                  <Twitter className="h-5 w-5" />
-                  <span className="sr-only">Share on Twitter</span>
-                </Button>
-                <Button variant="outline" size="icon" onClick={() => handleShare('facebook')}>
-                  <Facebook className="h-5 w-5" />
-                  <span className="sr-only">Share on Facebook</span>
-                </Button>
-                <Button variant="outline" size="icon" onClick={() => handleShare('linkedin')}>
-                  <Linkedin className="h-5 w-5" />
-                  <span className="sr-only">Share on LinkedIn</span>
-                </Button>
+                <div
+                  className="prose prose-lg dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: post.description }}
+                />
+                {socialSharing.enabled && (
+                  <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700 flex items-center justify-center space-x-4">
+                    <span className="text-lg font-medium text-gray-700 dark:text-gray-300">Share this post:</span>
+                    <Button variant="outline" size="icon" onClick={() => handleShare('twitter')}>
+                      <Twitter className="h-5 w-5" />
+                      <span className="sr-only">Share on Twitter</span>
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={() => handleShare('facebook')}>
+                      <Facebook className="h-5 w-5" />
+                      <span className="sr-only">Share on Facebook</span>
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={() => handleShare('linkedin')}>
+                      <Linkedin className="h-5 w-5" />
+                      <span className="sr-only">Share on LinkedIn</span>
+                    </Button>
+                  </div>
+                )}
+              </article>
+              <div className="max-w-3xl mx-auto">
+                <CommentsSection postId={post.id} />
               </div>
-            )}
-          </article>
-          <div className="max-w-3xl mx-auto">
-            <CommentsSection postId={post.id} />
-          </div>
+            </>
+          ) : (
+            <div className="text-center py-10">
+              <h1 className="text-4xl font-bold">Post Not Found</h1>
+              <p className="mt-4 text-lg text-muted-foreground">
+                The post you are looking for does not exist or may have been moved.
+              </p>
+              <Link to="/posts" className="mt-6 inline-block">
+                <Button>Back to All Posts</Button>
+              </Link>
+            </div>
+          )}
         </div>
       </main>
       <Footer />
