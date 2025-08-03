@@ -40,7 +40,7 @@ const Index = () => {
       if (pinnedError) {
         console.error('Error fetching pinned posts:', pinnedError);
       } else {
-        const formattedPinned = (pinnedData || []).map(p => ({...p, link: `/tutorials/${p.slug}`}));
+        const formattedPinned = (pinnedData || []).map(p => ({...p, link: `/posts/${p.slug}`}));
         setPinnedPosts(formattedPinned);
       }
 
@@ -54,7 +54,7 @@ const Index = () => {
       if (recentError) {
         console.error('Error fetching recent posts:', recentError);
       } else {
-        const formattedRecent = (recentData || []).map(p => ({...p, link: `/tutorials/${p.slug}`}));
+        const formattedRecent = (recentData || []).map(p => ({...p, link: `/posts/${p.slug}`}));
         setRecentPosts(formattedRecent);
       }
 
@@ -118,7 +118,7 @@ const Index = () => {
                   <div>
                     <div className="text-center mb-10">
                       <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                        Recent Tutorials
+                        Recent Posts
                       </h2>
                     </div>
                     <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -134,8 +134,8 @@ const Index = () => {
                       ))}
                     </div>
                     <div className="text-center mt-8">
-                      <Link to="/tutorials">
-                        <Button>View All Tutorials</Button>
+                      <Link to="/posts">
+                        <Button>View All Posts</Button>
                       </Link>
                     </div>
                   </div>
@@ -143,7 +143,7 @@ const Index = () => {
 
                 {pinnedPosts.length === 0 && recentPosts.length === 0 && (
                   <p className="text-center text-gray-600 dark:text-gray-400">
-                    No tutorials found.
+                    No posts found.
                   </p>
                 )}
               </>

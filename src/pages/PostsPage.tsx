@@ -21,7 +21,7 @@ interface Post {
 
 const POSTS_PER_PAGE = 6; // Define how many posts to load per page
 
-const TutorialsPage = () => {
+const PostsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [posts, setPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
@@ -49,7 +49,7 @@ const TutorialsPage = () => {
       console.error('Error fetching posts:', error);
       setHasMore(false); // Assume no more if error
     } else {
-      const formattedPosts = (data || []).map(p => ({...p, link: `/tutorials/${p.slug}`}));
+      const formattedPosts = (data || []).map(p => ({...p, link: `/posts/${p.slug}`}));
       setPosts(prevPosts => (page === 0 ? formattedPosts : [...prevPosts, ...formattedPosts]));
       setHasMore(formattedPosts.length === POSTS_PER_PAGE); // Check if exactly POSTS_PER_PAGE were returned
     }
@@ -95,7 +95,7 @@ const TutorialsPage = () => {
         <div className="container mx-auto px-6 md:px-8">
           <div className="text-center mb-10">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-8">
-              All Tutorials
+              All Posts
             </h1>
             <div className="mt-6 flex justify-center flex-wrap gap-2 mb-6">
               {categories.map((category) => (
@@ -111,7 +111,7 @@ const TutorialsPage = () => {
             <div className="mt-6 flex justify-center">
               <Input
                 type="text"
-                placeholder="Search tutorials..."
+                placeholder="Search posts..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="max-w-lg w-full"
@@ -137,7 +137,7 @@ const TutorialsPage = () => {
             </div>
           ) : (
             <p className="text-center text-gray-600 dark:text-gray-400">
-              No tutorials found.
+              No posts found.
             </p>
           )}
           {hasMore && !loadingPosts && filteredPosts.length > 0 && (
@@ -157,4 +157,4 @@ const TutorialsPage = () => {
   );
 };
 
-export default TutorialsPage;
+export default PostsPage;

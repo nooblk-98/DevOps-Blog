@@ -45,10 +45,10 @@ export const Header = () => {
                     Home
                   </NavLink>
                   <NavLink
-                    to="/tutorials"
+                    to="/posts"
                     className={({isActive}) => navLinkClasses({isActive})}
                   >
-                    Tutorials
+                    Posts
                   </NavLink>
                   <NavLink
                     to="/about"
@@ -77,8 +77,8 @@ export const Header = () => {
             <NavLink to="/" className={navLinkClasses}>
               Home
             </NavLink>
-            <NavLink to="/tutorials" className={navLinkClasses}>
-              Tutorials
+            <NavLink to="/posts" className={navLinkClasses}>
+              Posts
             </NavLink>
             <NavLink to="/about" className={navLinkClasses}>
               About

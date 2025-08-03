@@ -10,7 +10,7 @@ import Login from "@/pages/Login";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PostPage from "@/pages/PostPage";
 import About from "@/pages/About";
-import TutorialsPage from "@/pages/TutorialsPage"; // Import the new TutorialsPage
+import PostsPage from "@/pages/PostsPage"; // Import the new PostsPage
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { AdminDashboard } from "@/pages/admin/Dashboard";
 import { AdminPosts } from "@/pages/admin/Posts";
@@ -36,8 +36,8 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/tutorials" element={<TutorialsPage />} /> {/* New route for TutorialsPage */}
-              <Route path="/tutorials/:slug" element={<PostPage />} />
+              <Route path="/posts" element={<PostsPage />} /> {/* New route for PostsPage */}
+              <Route path="/posts/:slug" element={<PostPage />} />
               <Route path="/about" element={<About />} />
               <Route path="/login" element={<Login />} />
               
