@@ -38,11 +38,13 @@ import {
 import { showError, showSuccess } from '@/utils/toast';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Post {
   id?: number;
   title: string;
   description: string;
+  summary: string;
   image_url: string;
   category: string;
   slug: string;
@@ -200,14 +202,14 @@ export const AdminPosts = () => {
 
 const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (post: Post) => void, categories: Category[] }) => {
   const [formData, setFormData] = useState<Post>(
-    post || { title: '', description: '', image_url: '', category: '', slug: '' }
+    post || { title: '', description: '', summary: '', image_url: '', category: '', slug: '' }
   );
 
   useEffect(() => {
-    setFormData(post || { title: '', description: '', image_url: '', category: '', slug: '' });
+    setFormData(post || { title: '', description: '', summary: '', image_url: '', category: '', slug: '' });
   }, [post]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
@@ -227,8 +229,14 @@ const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (po
 
   return (
     <form id="post-form" onSubmit={handleSubmit} className="space-y-4 p-6">
-      <Input name="title" value={formData.title} onChange={handleChange} placeholder="Title" required />
-      <Input name="image_url" value={formData.image_url} onChange={handleChange} placeholder="Image URL" required />
+      <div className="space-y-2">
+        <Label htmlFor="title">Title</Label>
+        <Input id="title" name="title" value={formData.title} onChange={handleChange} placeholder="Title" required />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="image_url">Image URL</Label>
+        <Input id="image_url" name="image_url" value={formData.image_url} onChange={handleChange} placeholder="Image URL" required />
+      </div>
       <div className="space-y-2">
         <Label>Category</Label>
         <Select onValueChange={handleCategoryChange} value={formData.category}>
@@ -242,8 +250,18 @@ const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (po
           </SelectContent>
         </Select>
       </div>
-      <Input name="slug" value={formData.slug} onChange={handleChange} placeholder="Slug (e.g., my-post-title)" required />
-      <RichTextEditor value={formData.description} onChange={handleDescriptionChange} placeholder="Write your tutorial here..." />
+      <div className="space-y-2">
+        <Label htmlFor="slug">Slug</Label>
+        <Input id="slug" name="slug" value={formData.slug} onChange={handleChange} placeholder="Slug (e.g., my-post-title)" required />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="summary">Summary</Label>
+        <Textarea id="summary" name="summary" value={formData.summary} onChange={handleChange} placeholder="A short summary for the post card." required />
+      </div>
+      <div className="space-y-2">
+        <Label>Full Content</Label>
+        <RichTextEditor value={formData.description} onChange={handleDescriptionChange} placeholder="Write your tutorial here..." />
+      </div>
     </form>
   );
 };

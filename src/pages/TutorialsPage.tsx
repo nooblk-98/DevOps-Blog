@@ -11,6 +11,7 @@ interface Post {
   id: number;
   title: string;
   description: string;
+  summary: string;
   link: string;
   image_url: string;
   category: string;
@@ -84,7 +85,7 @@ const TutorialsPage = () => {
     .filter(
       (post) =>
         post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.description.toLowerCase().includes(searchQuery.toLowerCase())
+        post.summary.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
   return (
@@ -127,7 +128,7 @@ const TutorialsPage = () => {
                 <BlogPost
                   key={post.id}
                   title={post.title}
-                  description={post.description}
+                  summary={post.summary}
                   link={post.link}
                   imageUrl={post.image_url}
                   date={post.created_at}

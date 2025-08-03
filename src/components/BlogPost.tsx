@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 
 interface BlogPostProps {
   title: string;
-  description: string;
+  summary: string;
   link: string;
   imageUrl: string;
-  date: string; // Added date prop
+  date: string;
 }
 
-export const BlogPost = ({ title, description, link, imageUrl, date }: BlogPostProps) => {
+export const BlogPost = ({ title, summary, link, imageUrl, date }: BlogPostProps) => {
   const formattedDate = new Date(date).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -23,17 +23,12 @@ export const BlogPost = ({ title, description, link, imageUrl, date }: BlogPostP
       <div className="flex flex-col flex-grow">
         <CardHeader>
           <CardTitle>{title}</CardTitle>
-          <p className="text-sm text-muted-foreground">{formattedDate}</p> {/* Displaying the date */}
+          <p className="text-sm text-muted-foreground">{formattedDate}</p>
         </CardHeader>
         <CardContent className="flex-grow">
-          <div 
-            className="text-gray-600 dark:text-gray-400 text-sm overflow-hidden max-h-24 relative prose dark:prose-invert max-w-none"
-            style={{
-              WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
-              maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
-            }}
-            dangerouslySetInnerHTML={{ __html: description }} 
-          />
+          <p className="text-gray-600 dark:text-gray-400 text-sm">
+            {summary}
+          </p>
         </CardContent>
         <CardFooter>
           <Link to={link}>
