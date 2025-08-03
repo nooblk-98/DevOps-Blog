@@ -18,6 +18,7 @@ import {
   Image as ImageIcon,
   Palette,
   Highlighter,
+  ChevronDown,
 } from 'lucide-react'
 import { Toggle } from '@/components/ui/toggle'
 import { Button } from '@/components/ui/button'
@@ -26,6 +27,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { useState, useRef } from 'react'
 import { ImageUploadDialog } from './ImageUploadDialog'
@@ -38,6 +40,8 @@ export function EditorToolbar({ editor }: Props) {
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const textColorInputRef = useRef<HTMLInputElement>(null);
   const highlightColorInputRef = useRef<HTMLInputElement>(null);
+  const [lastTextColor, setLastTextColor] = useState('#000000');
+  const [lastHighlightColor, setLastHighlightColor] = useState('#ffff00');
 
   if (!editor) {
     return null
@@ -49,11 +53,51 @@ export function EditorToolbar({ editor }: Props) {
     }
   };
 
+  const handleTextColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newColor = e.target.value;
+    editor.chain().focus().setColor(newColor).run();
+    setLastTextColor(newColor);
+  };
+
+  const handleHighlightColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newColor = e.target.value;
+    editor.chain().focus().toggleHighlight({ color: newColor }).run();
+    setLastHighlightColor(newColor);
+  };
+
   const preventDefault = (e: Event) => e.preventDefault();
+
+  const fonts = ['Inter', 'Arial', 'Georgia', 'Times New Roman', 'Verdana', 'Courier New'];
+  const currentFont = editor.getAttributes('textStyle').fontFamily || 'Default';
 
   return (
     <>
       <div className="sticky top-0 z-10 bg-background border-b border-input p-2 flex flex-wrap items-center gap-1">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button type="button" variant="ghost" size="sm" className="w-28 justify-between">
+              <span>{currentFont}</span>
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            {fonts.map((font) => (
+              <DropdownMenuItem
+                key={font}
+                onSelect={preventDefault}
+                onClick={() => editor.chain().focus().setFontFamily(font).run()}
+                style={{ fontFamily: font }}
+              >
+                {font}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onSelect={preventDefault} onClick={() => editor.chain().focus().unsetFontFamily().run()}>
+              Reset
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <Toggle
           size="sm"
           pressed={editor.isActive('heading', { level: 1 })}
@@ -111,8 +155,8 @@ export function EditorToolbar({ editor }: Props) {
           type="color"
           ref={textColorInputRef}
           className="w-0 h-0 p-0 border-0 absolute -z-10"
-          onChange={(e) => editor.chain().focus().setColor((e.target as HTMLInputElement).value).run()}
-          value={editor.getAttributes('textStyle').color || '#000000'}
+          onChange={handleTextColorChange}
+          value={editor.getAttributes('textStyle').color || lastTextColor}
         />
 
         <Button
@@ -129,8 +173,8 @@ export function EditorToolbar({ editor }: Props) {
           type="color"
           ref={highlightColorInputRef}
           className="w-0 h-0 p-0 border-0 absolute -z-10"
-          onChange={(e) => editor.chain().focus().toggleHighlight({ color: (e.target as HTMLInputElement).value }).run()}
-          value={editor.getAttributes('highlight').color || '#ffff00'}
+          onChange={handleHighlightColorChange}
+          value={editor.getAttributes('highlight').color || lastHighlightColor}
         />
 
         <Toggle

@@ -5,6 +5,7 @@ import { TextAlign } from '@tiptap/extension-text-align'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
 import { Highlight } from '@tiptap/extension-highlight'
+import FontFamily from '@tiptap/extension-font-family'
 import { createLowlight, common } from 'lowlight'
 import { EditorToolbar } from './EditorToolbar'
 import { uploadImageToSupabase } from '@/utils/storage'
@@ -30,6 +31,9 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
         types: ['heading', 'paragraph'],
       }),
       TextStyle,
+      FontFamily.configure({
+        types: ['textStyle'],
+      }),
       Color,
       Highlight.configure({ multicolor: true }),
     ],
