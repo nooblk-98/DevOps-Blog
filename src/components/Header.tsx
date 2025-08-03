@@ -16,29 +16,9 @@ export const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
-        <div className="mr-4 hidden md:flex">
-          <Link to="/" className="mr-6 flex items-center space-x-2">
-            <MountainIcon className="h-6 w-6" />
-            <span className="font-bold">
-              DevOps Zone
-            </span>
-          </Link>
-          <nav className="flex items-center space-x-6 text-sm font-medium">
-            <NavLink to="/" className={navLinkClasses}>
-              Home
-            </NavLink>
-            <NavLink to="/tutorials" className={navLinkClasses}>
-              Tutorials
-            </NavLink>
-            <NavLink to="/about" className={navLinkClasses}>
-              About
-            </NavLink>
-          </nav>
-        </div>
-        
-        <div className="flex flex-1 items-center justify-between md:justify-end">
-          {/* Mobile Menu */}
+      <div className="container relative flex h-16 items-center justify-between">
+        {/* Left side: Logo and Mobile Menu Trigger */}
+        <div className="flex items-center">
           <div className="md:hidden">
             <Sheet>
               <SheetTrigger asChild>
@@ -78,6 +58,31 @@ export const Header = () => {
               </SheetContent>
             </Sheet>
           </div>
+          <Link to="/" className="hidden md:flex items-center space-x-2">
+            <MountainIcon className="h-6 w-6" />
+            <span className="font-bold">
+              DevOps Zone
+            </span>
+          </Link>
+        </div>
+
+        {/* Centered Desktop Navigation */}
+        <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <nav className="flex items-center space-x-6 text-sm font-medium">
+            <NavLink to="/" className={navLinkClasses}>
+              Home
+            </NavLink>
+            <NavLink to="/tutorials" className={navLinkClasses}>
+              Tutorials
+            </NavLink>
+            <NavLink to="/about" className={navLinkClasses}>
+              About
+            </NavLink>
+          </nav>
+        </div>
+
+        {/* Right side: Theme Toggle */}
+        <div className="flex items-center">
           <ThemeToggle />
         </div>
       </div>
