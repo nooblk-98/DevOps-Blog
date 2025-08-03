@@ -111,7 +111,7 @@ export function EditorToolbar({ editor }: Props) {
           type="color"
           ref={textColorInputRef}
           className="w-0 h-0 p-0 border-0 absolute -z-10"
-          onInput={(e) => editor.chain().focus().setColor((e.target as HTMLInputElement).value).run()}
+          onChange={(e) => editor.chain().focus().setColor((e.target as HTMLInputElement).value).run()}
           value={editor.getAttributes('textStyle').color || '#000000'}
         />
 
@@ -129,7 +129,7 @@ export function EditorToolbar({ editor }: Props) {
           type="color"
           ref={highlightColorInputRef}
           className="w-0 h-0 p-0 border-0 absolute -z-10"
-          onInput={(e) => editor.chain().focus().toggleHighlight({ color: (e.target as HTMLInputElement).value }).run()}
+          onChange={(e) => editor.chain().focus().toggleHighlight({ color: (e.target as HTMLInputElement).value }).run()}
           value={editor.getAttributes('highlight').color || '#ffff00'}
         />
 
