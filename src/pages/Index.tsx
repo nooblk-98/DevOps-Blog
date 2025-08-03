@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { BlogPost } from "@/components/BlogPost";
@@ -16,34 +16,47 @@ interface Post {
   image_url: string;
   category: string;
   slug: string;
-  created_at: string; // Ensure created_at is part of the Post interface
+  created_at: string;
 }
+
+const POSTS_PER_PAGE = 6; // Define how many posts to load per page
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [posts, setPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
+  const [currentPage, setCurrentPage] = useState(0); // Use 0-based index for offset
+  const [hasMore, setHasMore] = useState(true); // To check if there are more posts to load
   const { banner: bannerSettings, loading: loadingSettings } = useSettings();
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      setLoadingPosts(true);
-      const { data, error } = await supabase
-        .from('posts')
-        .select('*')
-        .order('created_at', { ascending: false });
+  const fetchPosts = useCallback(async (page: number) => {
+    setLoadingPosts(true);
+    const offset = page * POSTS_PER_PAGE;
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(offset, offset + POSTS_PER_PAGE - 1); // Fetch range
 
-      if (error) {
-        console.error('Error fetching posts:', error);
-      } else {
-        const formattedPosts = data.map(p => ({...p, link: `/tutorials/${p.slug}`}))
-        setPosts(formattedPosts || []);
-      }
-      setLoadingPosts(false);
-    };
-    
-    fetchPosts();
+    if (error) {
+      console.error('Error fetching posts:', error);
+      setHasMore(false); // Assume no more if error
+    } else {
+      const formattedPosts = (data || []).map(p => ({...p, link: `/tutorials/${p.slug}`}));
+      setPosts(prevPosts => (page === 0 ? formattedPosts : [...prevPosts, ...formattedPosts]));
+      setHasMore(formattedPosts.length === POSTS_PER_PAGE); // Check if exactly POSTS_PER_PAGE were returned
+    }
+    setLoadingPosts(false);
   }, []);
+
+  useEffect(() => {
+    fetchPosts(0); // Load initial posts on component mount
+  }, [fetchPosts]);
+
+  const handleLoadMore = () => {
+    setCurrentPage(prevPage => prevPage + 1);
+    fetchPosts(currentPage + 1);
+  };
 
   const categories = ["All", ...Array.from(new Set(posts.map((post) => post.category)))];
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -106,9 +119,9 @@ const Index = () => {
                 />
               </div>
             </div>
-            {loadingPosts ? (
+            {loadingPosts && currentPage === 0 ? ( // Show skeleton only for initial load
               <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-96 w-full" />)}
+                {[...Array(POSTS_PER_PAGE)].map((_, i) => <Skeleton key={i} className="h-96 w-full" />)}
               </div>
             ) : filteredPosts.length > 0 ? (
               <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -127,6 +140,16 @@ const Index = () => {
               <p className="text-center text-gray-600 dark:text-gray-400">
                 No tutorials found.
               </p>
+            )}
+            {hasMore && !loadingPosts && filteredPosts.length > 0 && (
+              <div className="text-center mt-8">
+                <Button onClick={handleLoadMore}>Load More</Button>
+              </div>
+            )}
+            {loadingPosts && currentPage > 0 && ( // Show skeleton for subsequent loads
+              <div className="text-center mt-8">
+                <Skeleton className="h-10 w-32 mx-auto" />
+              </div>
             )}
           </div>
         </section>

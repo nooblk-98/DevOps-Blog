@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { showError, showSuccess } from '@/utils/toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSettings } from '@/context/SettingsContext';
+import { RichTextEditor } from '@/components/RichTextEditor';
+import { Switch } from '@/components/ui/switch';
 
 interface BannerSettings {
   title: string;
@@ -19,10 +21,16 @@ interface SiteSettings {
   logo_url: string;
 }
 
+interface SocialSharingSettings {
+  enabled: boolean;
+}
+
 export const AdminSettings = () => {
   const { refreshSettings } = useSettings();
   const [bannerSettings, setBannerSettings] = useState<BannerSettings>({ title: '', subtitle: '', image_url: '' });
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({ name: '', logo_url: '' });
+  const [aboutContent, setAboutContent] = useState<string>('');
+  const [socialSharingSettings, setSocialSharingSettings] = useState<SocialSharingSettings>({ enabled: true });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,6 +47,12 @@ export const AdminSettings = () => {
 
         const site = data.find(s => s.key === 'site')?.value;
         if (site) setSiteSettings(site);
+
+        const about = data.find(s => s.key === 'about_page_content')?.value;
+        if (about) setAboutContent(about);
+
+        const social = data.find(s => s.key === 'social_sharing')?.value;
+        if (social) setSocialSharingSettings(social);
       }
       setLoading(false);
     };
@@ -56,8 +70,16 @@ export const AdminSettings = () => {
       .from('settings')
       .upsert({ key: 'site', value: siteSettings }, { onConflict: 'key' });
 
-    if (bannerError || siteError) {
-      showError(bannerError?.message || siteError?.message || 'An error occurred while saving.');
+    const { error: aboutError } = await supabase
+      .from('settings')
+      .upsert({ key: 'about_page_content', value: aboutContent }, { onConflict: 'key' });
+
+    const { error: socialError } = await supabase
+      .from('settings')
+      .upsert({ key: 'social_sharing', value: socialSharingSettings }, { onConflict: 'key' });
+
+    if (bannerError || siteError || aboutError || socialError) {
+      showError(bannerError?.message || siteError?.message || aboutError?.message || socialError?.message || 'An error occurred while saving.');
     } else {
       showSuccess('Settings updated successfully!');
       refreshSettings();
@@ -72,6 +94,10 @@ export const AdminSettings = () => {
   const handleSiteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setSiteSettings(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSocialSharingToggle = (checked: boolean) => {
+    setSocialSharingSettings({ enabled: checked });
   };
 
   if (loading) {
@@ -138,6 +164,33 @@ export const AdminSettings = () => {
               <div className="space-y-2">
                 <Label htmlFor="image_url">Banner Image URL</Label>
                 <Input id="image_url" name="image_url" value={bannerSettings.image_url} onChange={handleBannerChange} />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>About Page Content</CardTitle>
+              <CardDescription>Edit the content displayed on your About Us page.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <RichTextEditor value={aboutContent} onChange={setAboutContent} placeholder="Write your About Us content here..." />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Social Sharing</CardTitle>
+              <CardDescription>Enable or disable social sharing buttons on post pages.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="social-sharing-toggle"
+                  checked={socialSharingSettings.enabled}
+                  onCheckedChange={handleSocialSharingToggle}
+                />
+                <Label htmlFor="social-sharing-toggle">Enable Social Sharing Buttons</Label>
               </div>
             </CardContent>
           </Card>

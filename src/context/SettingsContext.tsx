@@ -12,9 +12,15 @@ interface BannerSettings {
   image_url: string;
 }
 
+interface SocialSharingSettings {
+  enabled: boolean;
+}
+
 interface Settings {
   site: SiteSettings;
   banner: BannerSettings;
+  aboutPageContent: string;
+  socialSharing: SocialSharingSettings;
   loading: boolean;
   refreshSettings: () => void;
 }
@@ -22,6 +28,8 @@ interface Settings {
 const defaultSettings: Settings = {
   site: { name: 'DevOps Zone', logo_url: '' },
   banner: { title: 'Welcome to DevOps Zone', subtitle: 'Your one-stop destination for DevOps tutorials and best practices.', image_url: '' },
+  aboutPageContent: '',
+  socialSharing: { enabled: true }, // Default to enabled
   loading: true,
   refreshSettings: () => {},
 };
@@ -43,12 +51,16 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    const newSettings: Partial<Pick<Settings, 'site' | 'banner'>> = {};
+    const newSettings: Partial<Pick<Settings, 'site' | 'banner' | 'aboutPageContent' | 'socialSharing'>> = {};
     for (const setting of data) {
       if (setting.key === 'site') {
         newSettings.site = setting.value as SiteSettings;
       } else if (setting.key === 'banner') {
         newSettings.banner = setting.value as BannerSettings;
+      } else if (setting.key === 'about_page_content') {
+        newSettings.aboutPageContent = setting.value as string;
+      } else if (setting.key === 'social_sharing') {
+        newSettings.socialSharing = setting.value as SocialSharingSettings;
       }
     }
     
@@ -56,6 +68,8 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
       ...prev,
       site: newSettings.site || prev.site,
       banner: newSettings.banner || prev.banner,
+      aboutPageContent: newSettings.aboutPageContent || prev.aboutPageContent,
+      socialSharing: newSettings.socialSharing || prev.socialSharing,
       loading: false,
     }));
   };
