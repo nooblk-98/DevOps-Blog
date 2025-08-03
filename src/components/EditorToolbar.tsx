@@ -45,6 +45,8 @@ export function EditorToolbar({ editor }: Props) {
     }
   };
 
+  const preventDefault = (e: Event) => e.preventDefault();
+
   return (
     <>
       <div className="sticky top-0 z-10 bg-background border-b border-input p-2 flex flex-wrap items-center gap-1">
@@ -119,6 +121,7 @@ export function EditorToolbar({ editor }: Props) {
           <Quote className="h-4 w-4" />
         </Toggle>
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           onClick={() => setIsImageDialogOpen(true)}
@@ -158,22 +161,22 @@ export function EditorToolbar({ editor }: Props) {
         {/* Line Height Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <Button type="button" variant="ghost" size="sm" className="h-8 h-8 p-0">
               <Rows className="h-4 w-4" />
               <span className="sr-only">Line Height</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={() => editor.chain().focus().setMark('textStyle', { lineHeight: '1.2' }).run()}>
+            <DropdownMenuItem onSelect={preventDefault} onClick={() => editor.chain().focus().setMark('textStyle', { lineHeight: '1.2' }).run()}>
               Compact (1.2)
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().setMark('textStyle', { lineHeight: '1.5' }).run()}>
+            <DropdownMenuItem onSelect={preventDefault} onClick={() => editor.chain().focus().setMark('textStyle', { lineHeight: '1.5' }).run()}>
               Normal (1.5)
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().setMark('textStyle', { lineHeight: '2.0' }).run()}>
+            <DropdownMenuItem onSelect={preventDefault} onClick={() => editor.chain().focus().setMark('textStyle', { lineHeight: '2.0' }).run()}>
               Spacious (2.0)
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => editor.chain().focus().unsetMark('textStyle').run()}>
+            <DropdownMenuItem onSelect={preventDefault} onClick={() => editor.chain().focus().unsetMark('textStyle').run()}>
               Reset
             </DropdownMenuItem>
           </DropdownMenuContent>
