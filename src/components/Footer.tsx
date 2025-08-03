@@ -17,7 +17,7 @@ export const Footer = () => {
   return (
     <footer className="bg-gray-900 text-white py-6 px-6 md:px-8">
       <div className={`container mx-auto flex flex-col items-center ${hasEnabledSocialLinks ? 'md:flex-row md:justify-between' : 'md:justify-center'}`}>
-        <p className="mb-4 md:mb-0">© 2024 {site.name}. All rights reserved.</p>
+        <p className="mb-4 md:mb-0">© {new Date().getFullYear()} {site.name}. All rights reserved.</p>
         {hasEnabledSocialLinks && (
           <div className="flex space-x-4">
             {Object.entries(socialIcons).map(([platform, Icon]) => {
