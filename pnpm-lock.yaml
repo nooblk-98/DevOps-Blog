@@ -104,6 +104,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.56.2
         version: 5.74.4(react@18.3.1)
+      '@tiptap/core':
+        specifier: ^3.0.9
+        version: 3.0.9(@tiptap/pm@3.0.9)
       '@tiptap/extension-code-block-lowlight':
         specifier: ^3.0.9
         version: 3.0.9(@tiptap/core@3.0.9(@tiptap/pm@3.0.9))(@tiptap/extension-code-block@3.0.9(@tiptap/core@3.0.9(@tiptap/pm@3.0.9))(@tiptap/pm@3.0.9))(@tiptap/pm@3.0.9)(highlight.js@11.11.1)(lowlight@3.3.0)

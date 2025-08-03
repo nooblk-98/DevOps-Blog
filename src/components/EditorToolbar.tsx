@@ -144,16 +144,16 @@ export function EditorToolbar({ editor }: Props) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuItem onClick={() => editor.chain().focus().setTextStyle({ lineHeight: '1.2' }).run()}>
+          <DropdownMenuItem onClick={() => editor.chain().focus().setMark('textStyle', { lineHeight: '1.2' }).run()}>
             Compact (1.2)
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().setTextStyle({ lineHeight: '1.5' }).run()}>
+          <DropdownMenuItem onClick={() => editor.chain().focus().setMark('textStyle', { lineHeight: '1.5' }).run()}>
             Normal (1.5)
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().setTextStyle({ lineHeight: '2.0' }).run()}>
+          <DropdownMenuItem onClick={() => editor.chain().focus().setMark('textStyle', { lineHeight: '2.0' }).run()}>
             Spacious (2.0)
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => editor.chain().focus().unsetTextStyle().run()}>
+          <DropdownMenuItem onClick={() => editor.chain().focus().unsetMark('textStyle').run()}>
             Reset
           </DropdownMenuItem>
         </DropdownMenuContent>
