@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Twitter, Facebook, Linkedin } from 'lucide-react';
 import { useSettings } from '@/context/SettingsContext';
 import { showSuccess, showError } from '@/utils/toast';
+import { CommentsSection } from '@/components/CommentsSection';
 
 interface Post {
   id: number;
@@ -120,41 +121,46 @@ const PostPage = () => {
               <Skeleton className="h-96 w-full" />
             </div>
           ) : post ? (
-            <article className="max-w-3xl mx-auto">
-              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">{post.title}</h1>
-              <p className="text-muted-foreground mb-8">
-                Posted in {post.category} on {new Date(post.created_at).toLocaleDateString()}
-              </p>
-              {post.image_url && <img src={post.image_url} alt={post.title} className="w-full h-auto max-h-[500px] object-cover rounded-lg mb-8" />}
-              
-              {post.summary && (
-                <p className="text-xl italic text-muted-foreground my-8 border-l-4 border-border pl-4">
-                  {post.summary}
+            <>
+              <article className="max-w-3xl mx-auto">
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">{post.title}</h1>
+                <p className="text-muted-foreground mb-8">
+                  Posted in {post.category} on {new Date(post.created_at).toLocaleDateString()}
                 </p>
-              )}
+                {post.image_url && <img src={post.image_url} alt={post.title} className="w-full h-auto max-h-[500px] object-cover rounded-lg mb-8" />}
+                
+                {post.summary && (
+                  <p className="text-xl italic text-muted-foreground my-8 border-l-4 border-border pl-4">
+                    {post.summary}
+                  </p>
+                )}
 
-              <div
-                className="prose prose-lg dark:prose-invert max-w-none"
-                dangerouslySetInnerHTML={{ __html: post.description }}
-              />
-              {socialSharing.enabled && (
-                <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700 flex items-center justify-center space-x-4">
-                  <span className="text-lg font-medium text-gray-700 dark:text-gray-300">Share this post:</span>
-                  <Button variant="outline" size="icon" onClick={() => handleShare('twitter')}>
-                    <Twitter className="h-5 w-5" />
-                    <span className="sr-only">Share on Twitter</span>
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={() => handleShare('facebook')}>
-                    <Facebook className="h-5 w-5" />
-                    <span className="sr-only">Share on Facebook</span>
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={() => handleShare('linkedin')}>
-                    <Linkedin className="h-5 w-5" />
-                    <span className="sr-only">Share on LinkedIn</span>
-                  </Button>
-                </div>
-              )}
-            </article>
+                <div
+                  className="prose prose-lg dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: post.description }}
+                />
+                {socialSharing.enabled && (
+                  <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700 flex items-center justify-center space-x-4">
+                    <span className="text-lg font-medium text-gray-700 dark:text-gray-300">Share this post:</span>
+                    <Button variant="outline" size="icon" onClick={() => handleShare('twitter')}>
+                      <Twitter className="h-5 w-5" />
+                      <span className="sr-only">Share on Twitter</span>
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={() => handleShare('facebook')}>
+                      <Facebook className="h-5 w-5" />
+                      <span className="sr-only">Share on Facebook</span>
+                    </Button>
+                    <Button variant="outline" size="icon" onClick={() => handleShare('linkedin')}>
+                      <Linkedin className="h-5 w-5" />
+                      <span className="sr-only">Share on LinkedIn</span>
+                    </Button>
+                  </div>
+                )}
+              </article>
+              <div className="max-w-3xl mx-auto">
+                <CommentsSection postId={post.id} />
+              </div>
+            </>
           ) : (
             <p className="text-center text-gray-600 dark:text-gray-400">Post not found.</p>
           )}
