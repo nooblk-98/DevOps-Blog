@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
@@ -77,6 +78,16 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
       },
     },
   })
+
+  useEffect(() => {
+    if (editor) {
+      const isSame = editor.getHTML() === value;
+      if (isSame) {
+        return;
+      }
+      editor.commands.setContent(value, false);
+    }
+  }, [value, editor]);
 
   return (
     <div className="border border-input rounded-md">
