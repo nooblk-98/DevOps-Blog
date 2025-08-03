@@ -20,6 +20,7 @@ import {
   Highlighter,
   ChevronDown,
   Terminal,
+  Minus,
 } from 'lucide-react'
 import { Toggle } from '@/components/ui/toggle'
 import { Button } from '@/components/ui/button'
@@ -215,6 +216,16 @@ export function EditorToolbar({ editor }: Props) {
         >
           <Quote className="h-4 w-4" />
         </Toggle>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          className="w-8 h-8 p-0"
+          title="Horizontal Rule"
+        >
+          <Minus className="h-4 w-4" />
+        </Button>
         <Button
           type="button"
           variant="ghost"
