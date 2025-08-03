@@ -70,15 +70,25 @@ export function EditorToolbar({ editor }: Props) {
   const preventDefault = (e: Event) => e.preventDefault();
 
   const fonts = ['Inter', 'Arial', 'Georgia', 'Times New Roman', 'Verdana', 'Courier New'];
-  const currentFont = editor.getAttributes('textStyle').fontFamily || 'Default';
+  
+  const getDisplayFont = () => {
+    const fontFamily = editor.getAttributes('textStyle').fontFamily;
+    if (!fontFamily) {
+      return 'Default';
+    }
+    // Get the first font from the stack, remove quotes
+    return fontFamily.split(',')[0].trim().replace(/['"]/g, '');
+  };
+  
+  const currentFont = getDisplayFont();
 
   return (
     <>
       <div className="sticky top-0 z-10 bg-background border-b border-input p-2 flex flex-wrap items-center gap-1">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button type="button" variant="ghost" size="sm" className="w-28 justify-between">
-              <span>{currentFont}</span>
+            <Button type="button" variant="ghost" size="sm" className="w-32 justify-between">
+              <span className="truncate">{currentFont}</span>
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
