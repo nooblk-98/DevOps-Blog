@@ -36,6 +36,7 @@ const PostsPage = () => {
     let query = supabase
       .from('posts')
       .select('*')
+      .eq('status', 'published')
       .order('created_at', { ascending: false });
 
     if (categoryFilter !== "All") {

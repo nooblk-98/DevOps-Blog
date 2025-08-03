@@ -35,6 +35,7 @@ const Index = () => {
         .from('posts')
         .select('*')
         .eq('is_pinned', true)
+        .eq('status', 'published')
         .order('created_at', { ascending: false });
 
       if (pinnedError) {
@@ -48,6 +49,7 @@ const Index = () => {
         .from('posts')
         .select('*')
         .eq('is_pinned', false)
+        .eq('status', 'published')
         .order('created_at', { ascending: false })
         .limit(9);
 

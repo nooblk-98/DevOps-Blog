@@ -40,7 +40,9 @@ import { RichTextEditor } from '@/components/RichTextEditor';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Pin } from 'lucide-react';
+import { Pin, Eye } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Link } from 'react-router-dom';
 
 interface Post {
   id?: number;
@@ -51,6 +53,7 @@ interface Post {
   category: string;
   slug: string;
   is_pinned: boolean;
+  status: 'draft' | 'published';
 }
 
 interface Category {
@@ -145,6 +148,7 @@ export const AdminPosts = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Pinned</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -154,12 +158,20 @@ export const AdminPosts = () => {
               {posts.map((post) => (
                 <TableRow key={post.id}>
                   <TableCell>{post.title}</TableCell>
+                  <TableCell>
+                    <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
+                      {post.status}
+                    </Badge>
+                  </TableCell>
                   <TableCell>{post.category}</TableCell>
                   <TableCell>
                     {post.is_pinned && <Pin className="h-4 w-4 text-primary" />}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="outline" size="sm" onClick={() => openDialog(post)} className="mr-2">Edit</Button>
+                  <TableCell className="text-right space-x-2">
+                    <Link to={`/posts/${post.slug}`} target="_blank">
+                      <Button variant="outline" size="icon"><Eye className="h-4 w-4" /></Button>
+                    </Link>
+                    <Button variant="outline" size="sm" onClick={() => openDialog(post)}>Edit</Button>
                     <Button variant="destructive" size="sm" onClick={() => openDeleteConfirm(post)}>Delete</Button>
                   </TableCell>
                 </TableRow>
@@ -208,12 +220,11 @@ export const AdminPosts = () => {
 };
 
 const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (post: Post) => void, categories: Category[] }) => {
-  const [formData, setFormData] = useState<Post>(
-    post || { title: '', description: '', summary: '', image_url: '', category: '', slug: '', is_pinned: false }
-  );
+  const defaultPostState: Post = { title: '', description: '', summary: '', image_url: '', category: '', slug: '', is_pinned: false, status: 'draft' };
+  const [formData, setFormData] = useState<Post>(post || defaultPostState);
 
   useEffect(() => {
-    setFormData(post || { title: '', description: '', summary: '', image_url: '', category: '', slug: '', is_pinned: false });
+    setFormData(post || defaultPostState);
   }, [post]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -229,6 +240,10 @@ const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (po
     setFormData(prev => ({ ...prev, category: value }));
   };
 
+  const handleStatusChange = (value: 'draft' | 'published') => {
+    setFormData(prev => ({ ...prev, status: value }));
+  };
+
   const handlePinChange = (checked: boolean) => {
     setFormData(prev => ({ ...prev, is_pinned: checked }));
   };
@@ -240,30 +255,46 @@ const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (po
 
   return (
     <form id="post-form" onSubmit={handleSubmit} className="space-y-4 p-6">
-      <div className="space-y-2">
-        <Label htmlFor="title">Title</Label>
-        <Input id="title" name="title" value={formData.title} onChange={handleChange} placeholder="Title" required />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="title">Title</Label>
+          <Input id="title" name="title" value={formData.title} onChange={handleChange} placeholder="Title" required />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="slug">Slug</Label>
+          <Input id="slug" name="slug" value={formData.slug} onChange={handleChange} placeholder="Slug (e.g., my-post-title)" required />
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="image_url">Image URL</Label>
         <Input id="image_url" name="image_url" value={formData.image_url} onChange={handleChange} placeholder="Image URL" required />
       </div>
-      <div className="space-y-2">
-        <Label>Category</Label>
-        <Select onValueChange={handleCategoryChange} value={formData.category}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select a category" />
-          </SelectTrigger>
-          <SelectContent>
-            {categories.map(cat => (
-              <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="slug">Slug</Label>
-        <Input id="slug" name="slug" value={formData.slug} onChange={handleChange} placeholder="Slug (e.g., my-post-title)" required />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label>Category</Label>
+          <Select onValueChange={handleCategoryChange} value={formData.category}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map(cat => (
+                <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Status</Label>
+          <Select onValueChange={handleStatusChange} value={formData.status}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="published">Published</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="summary">Summary</Label>
