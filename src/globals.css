@@ -99,3 +99,39 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .tiptap {
+    @apply prose dark:prose-invert max-w-none;
+    min-height: 200px;
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+  }
+
+  .tiptap:focus {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  .tiptap p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+    height: 0;
+  }
+
+  .prose pre {
+    @apply bg-muted text-muted-foreground rounded-md p-4;
+  }
+
+  .prose code {
+    @apply bg-muted text-muted-foreground rounded px-1 py-0.5;
+  }
+
+  .prose code::before,
+  .prose code::after {
+    content: "" !important;
+  }
+}

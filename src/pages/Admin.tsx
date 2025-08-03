@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
   TableBody,
@@ -16,7 +15,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -30,6 +28,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { showError, showSuccess } from '@/utils/toast';
 import { useNavigate } from 'react-router-dom';
+import { RichTextEditor } from '@/components/RichTextEditor';
 
 interface Post {
   id?: number;
@@ -138,8 +137,13 @@ const Admin = () => {
         </TableBody>
       </Table>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+      <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          setCurrentPost(null);
+        }
+        setIsDialogOpen(isOpen);
+      }}>
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>{currentPost?.id ? 'Edit Post' : 'Create Post'}</DialogTitle>
           </DialogHeader>
@@ -170,9 +174,17 @@ const PostForm = ({ post, onSave, onCancel }: { post: Post | null, onSave: (post
     post || { title: '', description: '', image_url: '', category: '', slug: '' }
   );
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  useEffect(() => {
+    setFormData(post || { title: '', description: '', image_url: '', category: '', slug: '' });
+  }, [post]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleDescriptionChange = (value: string) => {
+    setFormData(prev => ({ ...prev, description: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -183,10 +195,10 @@ const PostForm = ({ post, onSave, onCancel }: { post: Post | null, onSave: (post
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Input name="title" value={formData.title} onChange={handleChange} placeholder="Title" required />
-      <Textarea name="description" value={formData.description} onChange={handleChange} placeholder="Description" required />
       <Input name="image_url" value={formData.image_url} onChange={handleChange} placeholder="Image URL" required />
       <Input name="category" value={formData.category} onChange={handleChange} placeholder="Category" required />
       <Input name="slug" value={formData.slug} onChange={handleChange} placeholder="Slug (e.g., my-post-title)" required />
+      <RichTextEditor value={formData.description} onChange={handleDescriptionChange} placeholder="Write your tutorial here..." />
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
         <Button type="submit">Save</Button>

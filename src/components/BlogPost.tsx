@@ -18,7 +18,14 @@ export const BlogPost = ({ title, description, link, imageUrl }: BlogPostProps) 
           <CardTitle>{title}</CardTitle>
         </CardHeader>
         <CardContent className="flex-grow">
-          <p className="text-gray-600 dark:text-gray-400">{description}</p>
+          <div 
+            className="text-gray-600 dark:text-gray-400 text-sm overflow-hidden max-h-24 relative prose dark:prose-invert max-w-none"
+            style={{
+              WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
+              maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
+            }}
+            dangerouslySetInnerHTML={{ __html: description }} 
+          />
         </CardContent>
         <CardFooter>
           <Link to={link}>
