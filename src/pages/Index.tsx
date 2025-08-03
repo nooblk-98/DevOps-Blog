@@ -17,10 +17,17 @@ interface Post {
   slug: string;
 }
 
+interface BannerSettings {
+  title: string;
+  subtitle: string;
+  image_url: string;
+}
+
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [bannerSettings, setBannerSettings] = useState<BannerSettings | null>(null);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -38,7 +45,23 @@ const Index = () => {
       }
       setLoading(false);
     };
+    
+    const fetchBannerSettings = async () => {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'banner')
+        .single();
+
+      if (error) {
+        console.error('Error fetching banner settings:', error);
+      } else if (data) {
+        setBannerSettings(data.value as BannerSettings);
+      }
+    };
+
     fetchPosts();
+    fetchBannerSettings();
   }, []);
 
   const categories = ["All", ...Array.from(new Set(posts.map((post) => post.category)))];
@@ -61,16 +84,16 @@ const Index = () => {
       <main className="flex-1">
         <section
           className="relative py-20 md:py-32 bg-cover bg-center"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1544197150-b99a580bb7a8?q=80&w=2070&auto=format&fit=crop')" }}
+          style={{ backgroundImage: `url('${bannerSettings?.image_url || ''}')` }}
         >
           <div className="absolute inset-0 bg-black opacity-50"></div>
           <div className="relative container mx-auto px-6 md:px-8">
             <div className="text-center">
               <h1 className="text-4xl md:text-5xl font-bold text-white">
-                Welcome to DevOps Zone
+                {bannerSettings?.title || 'Welcome to DevOps Zone'}
               </h1>
               <p className="mt-4 text-lg text-gray-200">
-                Your one-stop destination for DevOps tutorials and best practices.
+                {bannerSettings?.subtitle || 'Your one-stop destination for DevOps tutorials and best practices.'}
               </p>
             </div>
           </div>

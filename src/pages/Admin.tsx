@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Table,
   TableBody,
@@ -26,9 +27,19 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { showError, showSuccess } from '@/utils/toast';
 import { useNavigate } from 'react-router-dom';
 import { RichTextEditor } from '@/components/RichTextEditor';
+import { CategoryManager } from '@/components/CategoryManager';
+import { SettingsManager } from '@/components/SettingsManager';
 
 interface Post {
   id?: number;
@@ -39,8 +50,14 @@ interface Post {
   slug: string;
 }
 
+interface Category {
+  id: number;
+  name: string;
+}
+
 const Admin = () => {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [currentPost, setCurrentPost] = useState<Post | null>(null);
@@ -57,8 +74,18 @@ const Admin = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    const { data, error } = await supabase.from('categories').select('*').order('name', { ascending: true });
+    if (error) {
+      showError('Failed to fetch categories');
+    } else {
+      setCategories(data || []);
+    }
+  };
+
   useEffect(() => {
     fetchPosts();
+    fetchCategories();
   }, []);
 
   const handleSave = async (post: Post) => {
@@ -78,7 +105,7 @@ const Admin = () => {
   };
 
   const handleDelete = async () => {
-    if (!postToDelete) return;
+    if (!postToDelete || !postToDelete.id) return;
     const { error } = await supabase.from('posts').delete().eq('id', postToDelete.id);
     if (error) {
       showError(error.message);
@@ -108,34 +135,49 @@ const Admin = () => {
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Manage Posts</h1>
-        <div>
-          <Button onClick={() => openDialog()} className="mr-2">Create New Post</Button>
-          <Button variant="outline" onClick={handleLogout}>Logout</Button>
-        </div>
+        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+        <Button variant="outline" onClick={handleLogout}>Logout</Button>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {posts.map((post) => (
-            <TableRow key={post.id}>
-              <TableCell>{post.title}</TableCell>
-              <TableCell>{post.category}</TableCell>
-              <TableCell className="text-right">
-                <Button variant="outline" size="sm" onClick={() => openDialog(post)} className="mr-2">Edit</Button>
-                <Button variant="destructive" size="sm" onClick={() => openDeleteConfirm(post)}>Delete</Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <Tabs defaultValue="posts">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="posts">Manage Posts</TabsTrigger>
+          <TabsTrigger value="categories">Manage Categories</TabsTrigger>
+          <TabsTrigger value="settings">Site Settings</TabsTrigger>
+        </TabsList>
+        <TabsContent value="posts">
+          <div className="flex justify-end my-4">
+            <Button onClick={() => openDialog()}>Create New Post</Button>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {posts.map((post) => (
+                <TableRow key={post.id}>
+                  <TableCell>{post.title}</TableCell>
+                  <TableCell>{post.category}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="outline" size="sm" onClick={() => openDialog(post)} className="mr-2">Edit</Button>
+                    <Button variant="destructive" size="sm" onClick={() => openDeleteConfirm(post)}>Delete</Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TabsContent>
+        <TabsContent value="categories">
+          <CategoryManager />
+        </TabsContent>
+        <TabsContent value="settings">
+          <SettingsManager />
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
         if (!isOpen) {
@@ -147,7 +189,7 @@ const Admin = () => {
           <DialogHeader>
             <DialogTitle>{currentPost?.id ? 'Edit Post' : 'Create Post'}</DialogTitle>
           </DialogHeader>
-          <PostForm post={currentPost} onSave={handleSave} onCancel={() => setIsDialogOpen(false)} />
+          <PostForm post={currentPost} onSave={handleSave} onCancel={() => setIsDialogOpen(false)} categories={categories} />
         </DialogContent>
       </Dialog>
 
@@ -169,7 +211,7 @@ const Admin = () => {
   );
 };
 
-const PostForm = ({ post, onSave, onCancel }: { post: Post | null, onSave: (post: Post) => void, onCancel: () => void }) => {
+const PostForm = ({ post, onSave, onCancel, categories }: { post: Post | null, onSave: (post: Post) => void, onCancel: () => void, categories: Category[] }) => {
   const [formData, setFormData] = useState<Post>(
     post || { title: '', description: '', image_url: '', category: '', slug: '' }
   );
@@ -187,6 +229,10 @@ const PostForm = ({ post, onSave, onCancel }: { post: Post | null, onSave: (post
     setFormData(prev => ({ ...prev, description: value }));
   };
 
+  const handleCategoryChange = (value: string) => {
+    setFormData(prev => ({ ...prev, category: value }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
@@ -196,7 +242,19 @@ const PostForm = ({ post, onSave, onCancel }: { post: Post | null, onSave: (post
     <form onSubmit={handleSubmit} className="space-y-4">
       <Input name="title" value={formData.title} onChange={handleChange} placeholder="Title" required />
       <Input name="image_url" value={formData.image_url} onChange={handleChange} placeholder="Image URL" required />
-      <Input name="category" value={formData.category} onChange={handleChange} placeholder="Category" required />
+      <div className="space-y-2">
+        <Label>Category</Label>
+        <Select onValueChange={handleCategoryChange} value={formData.category}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select a category" />
+          </SelectTrigger>
+          <SelectContent>
+            {categories.map(cat => (
+              <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       <Input name="slug" value={formData.slug} onChange={handleChange} placeholder="Slug (e.g., my-post-title)" required />
       <RichTextEditor value={formData.description} onChange={handleDescriptionChange} placeholder="Write your tutorial here..." />
       <div className="flex justify-end gap-2">
