@@ -9,7 +9,8 @@ import NotFound from "@/pages/NotFound";
 import Login from "@/pages/Login";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import PostPage from "@/pages/PostPage";
-import About from "@/pages/About"; // Import the new About page
+import About from "@/pages/About";
+import TutorialsPage from "@/pages/TutorialsPage"; // Import the new TutorialsPage
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { AdminDashboard } from "@/pages/admin/Dashboard";
 import { AdminPosts } from "@/pages/admin/Posts";
@@ -35,8 +36,9 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/tutorials" element={<TutorialsPage />} /> {/* New route for TutorialsPage */}
               <Route path="/tutorials/:slug" element={<PostPage />} />
-              <Route path="/about" element={<About />} /> {/* Add the About page route */}
+              <Route path="/about" element={<About />} />
               <Route path="/login" element={<Login />} />
               
               <Route path="/admin" element={<AdminRoutes />}>
