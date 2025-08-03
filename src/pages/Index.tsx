@@ -16,6 +16,7 @@ interface Post {
   image_url: string;
   category: string;
   slug: string;
+  created_at: string; // Ensure created_at is part of the Post interface
 }
 
 const Index = () => {
@@ -118,6 +119,7 @@ const Index = () => {
                     description={post.description}
                     link={post.link}
                     imageUrl={post.image_url}
+                    date={post.created_at}
                   />
                 ))}
               </div>
