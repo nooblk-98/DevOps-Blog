@@ -35,7 +35,7 @@ export function EditorToolbar({ editor }: Props) {
   }
 
   return (
-    <div className="border-b border-input p-2 flex flex-wrap items-center gap-1">
+    <div className="sticky top-0 z-10 bg-background border-b border-input p-2 flex flex-wrap items-center gap-1">
       <Toggle
         size="sm"
         pressed={editor.isActive('heading', { level: 1 })}

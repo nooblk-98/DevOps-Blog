@@ -16,6 +16,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -165,11 +166,17 @@ export const AdminPosts = () => {
         }
         setIsDialogOpen(isOpen);
       }}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto"> {/* Added max-h and overflow-y-auto */}
-          <DialogHeader>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0 flex flex-col">
+          <DialogHeader className="p-6 border-b shrink-0">
             <DialogTitle>{currentPost?.id ? 'Edit Post' : 'Create Post'}</DialogTitle>
           </DialogHeader>
-          <PostForm post={currentPost} onSave={handleSave} onCancel={() => setIsDialogOpen(false)} categories={categories} />
+          <div className="flex-grow overflow-y-auto">
+            <PostForm post={currentPost} onSave={handleSave} categories={categories} />
+          </div>
+          <DialogFooter className="p-6 border-t shrink-0">
+            <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+            <Button type="submit" form="post-form">Save</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -191,7 +198,7 @@ export const AdminPosts = () => {
   );
 };
 
-const PostForm = ({ post, onSave, onCancel, categories }: { post: Post | null, onSave: (post: Post) => void, onCancel: () => void, categories: Category[] }) => {
+const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (post: Post) => void, categories: Category[] }) => {
   const [formData, setFormData] = useState<Post>(
     post || { title: '', description: '', image_url: '', category: '', slug: '' }
   );
@@ -219,7 +226,7 @@ const PostForm = ({ post, onSave, onCancel, categories }: { post: Post | null, o
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form id="post-form" onSubmit={handleSubmit} className="space-y-4 p-6">
       <Input name="title" value={formData.title} onChange={handleChange} placeholder="Title" required />
       <Input name="image_url" value={formData.image_url} onChange={handleChange} placeholder="Image URL" required />
       <div className="space-y-2">
@@ -237,10 +244,6 @@ const PostForm = ({ post, onSave, onCancel, categories }: { post: Post | null, o
       </div>
       <Input name="slug" value={formData.slug} onChange={handleChange} placeholder="Slug (e.g., my-post-title)" required />
       <RichTextEditor value={formData.description} onChange={handleDescriptionChange} placeholder="Write your tutorial here..." />
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button type="submit">Save</Button>
-      </div>
     </form>
   );
 };
