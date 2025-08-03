@@ -39,6 +39,8 @@ import { showError, showSuccess } from '@/utils/toast';
 import { RichTextEditor } from '@/components/RichTextEditor';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { Pin } from 'lucide-react';
 
 interface Post {
   id?: number;
@@ -48,6 +50,7 @@ interface Post {
   image_url: string;
   category: string;
   slug: string;
+  is_pinned: boolean;
 }
 
 interface Category {
@@ -143,6 +146,7 @@ export const AdminPosts = () => {
               <TableRow>
                 <TableHead>Title</TableHead>
                 <TableHead>Category</TableHead>
+                <TableHead>Pinned</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -151,6 +155,9 @@ export const AdminPosts = () => {
                 <TableRow key={post.id}>
                   <TableCell>{post.title}</TableCell>
                   <TableCell>{post.category}</TableCell>
+                  <TableCell>
+                    {post.is_pinned && <Pin className="h-4 w-4 text-primary" />}
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button variant="outline" size="sm" onClick={() => openDialog(post)} className="mr-2">Edit</Button>
                     <Button variant="destructive" size="sm" onClick={() => openDeleteConfirm(post)}>Delete</Button>
@@ -202,11 +209,11 @@ export const AdminPosts = () => {
 
 const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (post: Post) => void, categories: Category[] }) => {
   const [formData, setFormData] = useState<Post>(
-    post || { title: '', description: '', summary: '', image_url: '', category: '', slug: '' }
+    post || { title: '', description: '', summary: '', image_url: '', category: '', slug: '', is_pinned: false }
   );
 
   useEffect(() => {
-    setFormData(post || { title: '', description: '', summary: '', image_url: '', category: '', slug: '' });
+    setFormData(post || { title: '', description: '', summary: '', image_url: '', category: '', slug: '', is_pinned: false });
   }, [post]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -220,6 +227,10 @@ const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (po
 
   const handleCategoryChange = (value: string) => {
     setFormData(prev => ({ ...prev, category: value }));
+  };
+
+  const handlePinChange = (checked: boolean) => {
+    setFormData(prev => ({ ...prev, is_pinned: checked }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -261,6 +272,14 @@ const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (po
       <div className="space-y-2">
         <Label>Full Content</Label>
         <RichTextEditor value={formData.description} onChange={handleDescriptionChange} placeholder="Write your tutorial here..." />
+      </div>
+      <div className="flex items-center space-x-2 pt-2">
+        <Switch
+          id="is_pinned"
+          checked={formData.is_pinned}
+          onCheckedChange={handlePinChange}
+        />
+        <Label htmlFor="is_pinned">Pin this post to the homepage</Label>
       </div>
     </form>
   );

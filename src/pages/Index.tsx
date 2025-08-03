@@ -18,31 +18,49 @@ interface Post {
   category: string;
   slug: string;
   created_at: string;
+  is_pinned: boolean;
 }
 
 const Index = () => {
   const { banner: bannerSettings } = useSettings();
+  const [pinnedPosts, setPinnedPosts] = useState<Post[]>([]);
   const [recentPosts, setRecentPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
 
   useEffect(() => {
-    const fetchRecentPosts = async () => {
+    const fetchPosts = async () => {
       setLoadingPosts(true);
-      const { data, error } = await supabase
+
+      const { data: pinnedData, error: pinnedError } = await supabase
         .from('posts')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(9); // Fetch only the 9 most recent posts
+        .eq('is_pinned', true)
+        .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching recent posts:', error);
+      if (pinnedError) {
+        console.error('Error fetching pinned posts:', pinnedError);
       } else {
-        const formattedPosts = (data || []).map(p => ({...p, link: `/tutorials/${p.slug}`}));
-        setRecentPosts(formattedPosts);
+        const formattedPinned = (pinnedData || []).map(p => ({...p, link: `/tutorials/${p.slug}`}));
+        setPinnedPosts(formattedPinned);
       }
+
+      const { data: recentData, error: recentError } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('is_pinned', false)
+        .order('created_at', { ascending: false })
+        .limit(9);
+
+      if (recentError) {
+        console.error('Error fetching recent posts:', recentError);
+      } else {
+        const formattedRecent = (recentData || []).map(p => ({...p, link: `/tutorials/${p.slug}`}));
+        setRecentPosts(formattedRecent);
+      }
+
       setLoadingPosts(false);
     };
-    fetchRecentPosts();
+    fetchPosts();
   }, []);
 
   return (
@@ -68,39 +86,67 @@ const Index = () => {
 
         <section className="py-12 md:py-20 bg-white dark:bg-gray-950">
           <div className="container mx-auto px-6 md:px-8">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Recent Tutorials
-              </h2>
-            </div>
             {loadingPosts ? (
               <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {[...Array(9)].map((_, i) => <Skeleton key={i} className="h-96 w-full" />)}
               </div>
-            ) : recentPosts.length > 0 ? (
-              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {recentPosts.map((post) => (
-                  <BlogPost
-                    key={post.id}
-                    title={post.title}
-                    summary={post.summary}
-                    link={post.link}
-                    imageUrl={post.image_url}
-                    date={post.created_at}
-                  />
-                ))}
-              </div>
             ) : (
-              <p className="text-center text-gray-600 dark:text-gray-400">
-                No recent tutorials found.
-              </p>
-            )}
-            {recentPosts.length > 0 && (
-              <div className="text-center mt-8">
-                <Link to="/tutorials">
-                  <Button>View All Tutorials</Button>
-                </Link>
-              </div>
+              <>
+                {pinnedPosts.length > 0 && (
+                  <div className="mb-16">
+                    <div className="text-center mb-10">
+                      <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+                        Pinned Posts
+                      </h2>
+                    </div>
+                    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                      {pinnedPosts.map((post) => (
+                        <BlogPost
+                          key={post.id}
+                          title={post.title}
+                          summary={post.summary}
+                          link={post.link}
+                          imageUrl={post.image_url}
+                          date={post.created_at}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {recentPosts.length > 0 && (
+                  <div>
+                    <div className="text-center mb-10">
+                      <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+                        Recent Tutorials
+                      </h2>
+                    </div>
+                    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                      {recentPosts.map((post) => (
+                        <BlogPost
+                          key={post.id}
+                          title={post.title}
+                          summary={post.summary}
+                          link={post.link}
+                          imageUrl={post.image_url}
+                          date={post.created_at}
+                        />
+                      ))}
+                    </div>
+                    <div className="text-center mt-8">
+                      <Link to="/tutorials">
+                        <Button>View All Tutorials</Button>
+                      </Link>
+                    </div>
+                  </div>
+                )}
+
+                {pinnedPosts.length === 0 && recentPosts.length === 0 && (
+                  <p className="text-center text-gray-600 dark:text-gray-400">
+                    No tutorials found.
+                  </p>
+                )}
+              </>
             )}
           </div>
         </section>
