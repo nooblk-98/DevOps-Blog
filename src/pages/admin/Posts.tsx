@@ -43,6 +43,8 @@ import { Switch } from '@/components/ui/switch';
 import { Pin, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
+import { DatePickerWithRange } from '@/components/ui/date-range-picker';
+import { DateRange } from 'react-day-picker';
 
 interface Post {
   id?: number;
@@ -68,30 +70,78 @@ export const AdminPosts = () => {
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [currentPost, setCurrentPost] = useState<Post | null>(null);
   const [postToDelete, setPostToDelete] = useState<Post | null>(null);
-
-  const fetchPosts = async () => {
-    const { data, error } = await supabase.from('posts').select('*').order('created_at', { ascending: false });
-    if (error) {
-      showError('Failed to fetch posts');
-      console.error(error);
-    } else {
-      setPosts(data || []);
-    }
-  };
-
-  const fetchCategories = async () => {
-    const { data, error } = await supabase.from('categories').select('*').order('name', { ascending: true });
-    if (error) {
-      showError('Failed to fetch categories');
-    } else {
-      setCategories(data || []);
-    }
-  };
+  const [filters, setFilters] = useState<{
+    category: string;
+    status: 'all' | 'draft' | 'published';
+    pinned: 'all' | 'true' | 'false';
+    dateRange: DateRange | undefined;
+  }>({
+    category: 'all',
+    status: 'all',
+    pinned: 'all',
+    dateRange: undefined,
+  });
 
   useEffect(() => {
+    const fetchPosts = async () => {
+      let query = supabase.from('posts').select('*');
+
+      if (filters.category !== 'all') {
+        query = query.eq('category', filters.category);
+      }
+      if (filters.status !== 'all') {
+        query = query.eq('status', filters.status);
+      }
+      if (filters.pinned !== 'all') {
+        query = query.eq('is_pinned', filters.pinned === 'true');
+      }
+      if (filters.dateRange?.from) {
+        query = query.gte('created_at', filters.dateRange.from.toISOString());
+      }
+      if (filters.dateRange?.to) {
+        const toDate = new Date(filters.dateRange.to);
+        toDate.setHours(23, 59, 59, 999); // Set to end of day
+        query = query.lte('created_at', toDate.toISOString());
+      }
+
+      query = query.order('created_at', { ascending: false });
+
+      const { data, error } = await query;
+      if (error) {
+        showError('Failed to fetch posts');
+        console.error(error);
+      } else {
+        setPosts(data || []);
+      }
+    };
+
     fetchPosts();
+  }, [filters]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data, error } = await supabase.from('categories').select('*').order('name', { ascending: true });
+      if (error) {
+        showError('Failed to fetch categories');
+      } else {
+        setCategories(data || []);
+      }
+    };
     fetchCategories();
   }, []);
+
+  const handleFilterChange = (filterName: keyof typeof filters, value: any) => {
+    setFilters(prev => ({ ...prev, [filterName]: value }));
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      category: 'all',
+      status: 'all',
+      pinned: 'all',
+      dateRange: undefined,
+    });
+  };
 
   const handleSave = async (post: Post) => {
     const { id, ...postData } = post;
@@ -105,7 +155,7 @@ export const AdminPosts = () => {
       showSuccess(`Post ${id ? 'updated' : 'created'} successfully!`);
       setIsDialogOpen(false);
       setCurrentPost(null);
-      fetchPosts();
+      resetFilters(); // Reset filters to ensure new/updated post is visible
     }
   };
 
@@ -116,7 +166,7 @@ export const AdminPosts = () => {
       showError(error.message);
     } else {
       showSuccess('Post deleted successfully!');
-      fetchPosts();
+      setFilters(f => ({...f})); // Re-trigger fetch
     }
     setIsAlertOpen(false);
     setPostToDelete(null);
@@ -144,6 +194,44 @@ export const AdminPosts = () => {
           <CardDescription>Create, edit, and delete your blog posts.</CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="flex flex-wrap items-center gap-4 mb-6 p-4 border rounded-lg">
+            <Select value={filters.category} onValueChange={(value) => handleFilterChange('category', value)}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Filter by category..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map(cat => (
+                  <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Filter by status..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="published">Published</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filters.pinned} onValueChange={(value) => handleFilterChange('pinned', value)}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Filter by pinned..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Pinned</SelectItem>
+                <SelectItem value="true">Pinned</SelectItem>
+                <SelectItem value="false">Not Pinned</SelectItem>
+              </SelectContent>
+            </Select>
+            <DatePickerWithRange
+              date={filters.dateRange}
+              onDateChange={(date) => handleFilterChange('dateRange', date)}
+            />
+            <Button variant="ghost" onClick={resetFilters}>Reset Filters</Button>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
