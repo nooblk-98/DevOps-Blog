@@ -23,10 +23,10 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
       CodeBlockLowlight.configure({
         lowlight,
       }),
-      TextAlign.configure({ // Configure TextAlign extension
+      TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
-      TextStyle, // Add TextStyle extension
+      TextStyle,
     ],
     content: value,
     onUpdate: ({ editor }) => {
