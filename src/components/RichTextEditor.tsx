@@ -1,7 +1,7 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import { lowlight } from 'lowlight/lib/core'
+import { lowlight } from 'lowlight'
 import javascript from 'highlight.js/lib/languages/javascript'
 import typescript from 'highlight.js/lib/languages/typescript'
 import bash from 'highlight.js/lib/languages/bash'
@@ -12,13 +12,13 @@ import html from 'highlight.js/lib/languages/xml' // for html
 import { EditorToolbar } from './EditorToolbar'
 
 // Register languages for syntax highlighting
-lowlight.registerLanguage('javascript', javascript)
-lowlight.registerLanguage('typescript', typescript)
-lowlight.registerLanguage('bash', bash)
-lowlight.registerLanguage('sql', sql)
-lowlight.registerLanguage('json', json)
-lowlight.registerLanguage('css', css)
-lowlight.registerLanguage('html', html)
+lowlight.register('javascript', javascript)
+lowlight.register('typescript', typescript)
+lowlight.register('bash', bash)
+lowlight.register('sql', sql)
+lowlight.register('json', json)
+lowlight.register('css', css)
+lowlight.register('html', html)
 
 interface RichTextEditorProps {
   value: string;
