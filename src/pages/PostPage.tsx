@@ -79,7 +79,7 @@ const PostPage = () => {
               <Skeleton className="h-96 w-full" />
             </div>
           ) : post ? (
-            <article>
+            <article className="max-w-3xl mx-auto"> {/* Added max-w-3xl and mx-auto here */}
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">{post.title}</h1>
               <p className="text-muted-foreground mb-8">
                 Posted in {post.category} on {new Date(post.created_at).toLocaleDateString()}
