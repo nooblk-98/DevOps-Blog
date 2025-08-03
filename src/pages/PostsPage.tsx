@@ -14,45 +14,56 @@ interface Post {
   summary: string;
   link: string;
   image_url: string;
-  category: string;
   slug: string;
   created_at: string;
+  categories: { name: string }[];
 }
 
-const POSTS_PER_PAGE = 6; // Define how many posts to load per page
+const POSTS_PER_PAGE = 6;
 
 const PostsPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [posts, setPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
-  const [currentPage, setCurrentPage] = useState(0); // Use 0-based index for offset
-  const [hasMore, setHasMore] = useState(true); // To check if there are more posts to load
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   const fetchPosts = useCallback(async (page: number, categoryFilter: string = "All") => {
     setLoadingPosts(true);
     const offset = page * POSTS_PER_PAGE;
+    
     let query = supabase
       .from('posts')
-      .select('*')
+      .select('*, categories(name)')
       .eq('status', 'published')
       .order('created_at', { ascending: false });
 
     if (categoryFilter !== "All") {
-      query = query.eq('category', categoryFilter);
+      const { data: postIds, error: postIdsError } = await supabase
+        .from('post_categories')
+        .select('post_id, categories!inner(name)')
+        .eq('categories.name', categoryFilter);
+
+      if (postIdsError) {
+        console.error('Error fetching post IDs for category', postIdsError);
+        setHasMore(false);
+      } else {
+        const ids = postIds.map(p => p.post_id);
+        query = query.in('id', ids);
+      }
     }
 
-    const { data, error } = await query
-      .range(offset, offset + POSTS_PER_PAGE - 1);
+    const { data, error } = await query.range(offset, offset + POSTS_PER_PAGE - 1);
 
     if (error) {
       console.error('Error fetching posts:', error);
-      setHasMore(false); // Assume no more if error
+      setHasMore(false);
     } else {
-      const formattedPosts = (data || []).map(p => ({...p, link: `/posts/${p.slug}`}));
+      const formattedPosts = (data || []).map(p => ({...p, link: `/posts/${p.slug}`})) as Post[];
       setPosts(prevPosts => (page === 0 ? formattedPosts : [...prevPosts, ...formattedPosts]));
-      setHasMore(formattedPosts.length === POSTS_PER_PAGE); // Check if exactly POSTS_PER_PAGE were returned
+      setHasMore(formattedPosts.length === POSTS_PER_PAGE);
     }
     setLoadingPosts(false);
   }, []);
@@ -68,26 +79,25 @@ const PostsPage = () => {
 
   useEffect(() => {
     fetchCategories();
-    fetchPosts(0, selectedCategory); // Load initial posts on component mount
-  }, [fetchPosts, fetchCategories, selectedCategory]); // Re-fetch when category changes
+  }, [fetchCategories]);
+
+  useEffect(() => {
+    setCurrentPage(0);
+    setPosts([]);
+    fetchPosts(0, selectedCategory);
+  }, [fetchPosts, selectedCategory]);
 
   const handleLoadMore = () => {
-    setCurrentPage(prevPage => prevPage + 1);
-    fetchPosts(currentPage + 1, selectedCategory);
+    const nextPage = currentPage + 1;
+    setCurrentPage(nextPage);
+    fetchPosts(nextPage, selectedCategory);
   };
 
-  const handleCategoryChange = (category: string) => {
-    setSelectedCategory(category);
-    setCurrentPage(0); // Reset page when category changes
-    setPosts([]); // Clear posts to show loading state for new category
-  };
-
-  const filteredPosts = posts
-    .filter(
-      (post) =>
-        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.summary.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+  const filteredPosts = posts.filter(
+    (post) =>
+      post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.summary.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -103,7 +113,7 @@ const PostsPage = () => {
                 <Button
                   key={category}
                   variant={selectedCategory === category ? "default" : "outline"}
-                  onClick={() => handleCategoryChange(category)}
+                  onClick={() => setSelectedCategory(category)}
                 >
                   {category}
                 </Button>
@@ -133,6 +143,7 @@ const PostsPage = () => {
                   link={post.link}
                   imageUrl={post.image_url}
                   date={post.created_at}
+                  categories={post.categories}
                 />
               ))}
             </div>

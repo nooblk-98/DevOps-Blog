@@ -10,6 +10,7 @@ import { useSettings } from '@/context/SettingsContext';
 import { showSuccess, showError } from '@/utils/toast';
 import { CommentsSection } from '@/components/CommentsSection';
 import { Session } from '@supabase/supabase-js';
+import { Badge } from '@/components/ui/badge';
 
 interface Post {
   id: number;
@@ -17,10 +18,10 @@ interface Post {
   description: string;
   summary: string;
   image_url: string;
-  category: string;
   created_at: string;
   slug: string;
   status: 'draft' | 'published';
+  categories: { name: string }[];
 }
 
 const PostPage = () => {
@@ -49,14 +50,14 @@ const PostPage = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('posts')
-        .select('*')
+        .select('*, categories(name)')
         .eq('slug', slug)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+      if (error && error.code !== 'PGRST116') {
         console.error('Error fetching post:', error);
       }
-      setPost(data);
+      setPost(data as Post | null);
       setLoading(false);
     };
     fetchPost();
@@ -147,9 +148,15 @@ const PostPage = () => {
                   </div>
                 )}
                 <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">{post.title}</h1>
-                <p className="text-muted-foreground mb-8">
-                  Posted in {post.category} on {new Date(post.created_at).toLocaleDateString()}
-                </p>
+                <div className="flex items-center gap-4 text-muted-foreground mb-8">
+                  <span>Posted on {new Date(post.created_at).toLocaleDateString()}</span>
+                  <div className="flex flex-wrap gap-2">
+                    <span>in</span>
+                    {post.categories.map((cat, index) => (
+                      <Badge key={index} variant="outline">{cat.name}</Badge>
+                    ))}
+                  </div>
+                </div>
                 {post.image_url && <img src={post.image_url} alt={post.title} className="w-full h-auto max-h-[500px] object-cover rounded-lg mb-8" />}
                 
                 {post.summary && (

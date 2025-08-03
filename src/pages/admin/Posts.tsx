@@ -45,6 +45,12 @@ import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
+import { MultiSelect } from '@/components/ui/multi-select';
+
+interface Category {
+  id: number;
+  name: string;
+}
 
 interface Post {
   id?: number;
@@ -52,15 +58,14 @@ interface Post {
   description: string;
   summary: string;
   image_url: string;
-  category: string;
   slug: string;
   is_pinned: boolean;
   status: 'draft' | 'published';
+  categories: Category[];
 }
 
-interface Category {
-  id: number;
-  name: string;
+interface PostFormData extends Omit<Post, 'categories'> {
+  category_ids: string[];
 }
 
 export const AdminPosts = () => {
@@ -82,39 +87,50 @@ export const AdminPosts = () => {
     dateRange: undefined,
   });
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      let query = supabase.from('posts').select('*');
+  const fetchPosts = async () => {
+    let query = supabase.from('posts').select('*, categories(id, name)');
 
-      if (filters.category !== 'all') {
-        query = query.eq('category', filters.category);
-      }
-      if (filters.status !== 'all') {
-        query = query.eq('status', filters.status);
-      }
-      if (filters.pinned !== 'all') {
-        query = query.eq('is_pinned', filters.pinned === 'true');
-      }
-      if (filters.dateRange?.from) {
-        query = query.gte('created_at', filters.dateRange.from.toISOString());
-      }
-      if (filters.dateRange?.to) {
-        const toDate = new Date(filters.dateRange.to);
-        toDate.setHours(23, 59, 59, 999); // Set to end of day
-        query = query.lte('created_at', toDate.toISOString());
-      }
-
-      query = query.order('created_at', { ascending: false });
-
-      const { data, error } = await query;
-      if (error) {
-        showError('Failed to fetch posts');
-        console.error(error);
+    if (filters.status !== 'all') {
+      query = query.eq('status', filters.status);
+    }
+    if (filters.pinned !== 'all') {
+      query = query.eq('is_pinned', filters.pinned === 'true');
+    }
+    if (filters.dateRange?.from) {
+      query = query.gte('created_at', filters.dateRange.from.toISOString());
+    }
+    if (filters.dateRange?.to) {
+      const toDate = new Date(filters.dateRange.to);
+      toDate.setHours(23, 59, 59, 999);
+      query = query.lte('created_at', toDate.toISOString());
+    }
+    
+    if (filters.category !== 'all') {
+      const { data: postIds, error: postIdsError } = await supabase
+        .from('post_categories')
+        .select('post_id')
+        .eq('category_id', parseInt(filters.category));
+      
+      if (postIdsError) {
+        showError('Failed to filter by category');
       } else {
-        setPosts(data || []);
+        const ids = postIds.map(p => p.post_id);
+        query = query.in('id', ids);
       }
-    };
+    }
 
+    query = query.order('created_at', { ascending: false });
+
+    const { data, error } = await query;
+    if (error) {
+      showError('Failed to fetch posts');
+      console.error(error);
+    } else {
+      setPosts(data as Post[] || []);
+    }
+  };
+
+  useEffect(() => {
     fetchPosts();
   }, [filters]);
 
@@ -143,20 +159,51 @@ export const AdminPosts = () => {
     });
   };
 
-  const handleSave = async (post: Post) => {
-    const { id, ...postData } = post;
-    const { error } = id
-      ? await supabase.from('posts').update(postData).eq('id', id)
-      : await supabase.from('posts').insert(postData);
+  const handleSave = async (formData: PostFormData) => {
+    const { category_ids, ...postData } = formData;
 
-    if (error) {
-      showError(error.message);
-    } else {
-      showSuccess(`Post ${id ? 'updated' : 'created'} successfully!`);
-      setIsDialogOpen(false);
-      setCurrentPost(null);
-      resetFilters(); // Reset filters to ensure new/updated post is visible
+    const { data: savedPost, error: postError } = await supabase
+      .from('posts')
+      .upsert({ ...postData })
+      .select()
+      .single();
+
+    if (postError) {
+      showError(postError.message);
+      return;
     }
+
+    const postId = savedPost.id;
+
+    const { error: deleteError } = await supabase
+      .from('post_categories')
+      .delete()
+      .eq('post_id', postId);
+
+    if (deleteError) {
+      showError(deleteError.message);
+      return;
+    }
+
+    if (category_ids && category_ids.length > 0) {
+      const newPostCategories = category_ids.map(catId => ({
+        post_id: postId,
+        category_id: parseInt(catId, 10),
+      }));
+      const { error: insertError } = await supabase
+        .from('post_categories')
+        .insert(newPostCategories);
+
+      if (insertError) {
+        showError(insertError.message);
+        return;
+      }
+    }
+
+    showSuccess(`Post ${formData.id ? 'updated' : 'created'} successfully!`);
+    setIsDialogOpen(false);
+    setCurrentPost(null);
+    fetchPosts();
   };
 
   const handleDelete = async () => {
@@ -166,7 +213,7 @@ export const AdminPosts = () => {
       showError(error.message);
     } else {
       showSuccess('Post deleted successfully!');
-      setFilters(f => ({...f})); // Re-trigger fetch
+      fetchPosts();
     }
     setIsAlertOpen(false);
     setPostToDelete(null);
@@ -202,7 +249,7 @@ export const AdminPosts = () => {
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
                 {categories.map(cat => (
-                  <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                  <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -236,8 +283,8 @@ export const AdminPosts = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>
+                <TableHead>Categories</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Category</TableHead>
                 <TableHead>Pinned</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -247,11 +294,15 @@ export const AdminPosts = () => {
                 <TableRow key={post.id}>
                   <TableCell>{post.title}</TableCell>
                   <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {post.categories.map(cat => <Badge key={cat.id} variant="secondary">{cat.name}</Badge>)}
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
                       {post.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>{post.category}</TableCell>
                   <TableCell>
                     {post.is_pinned && <Pin className="h-4 w-4 text-primary" />}
                   </TableCell>
@@ -270,9 +321,7 @@ export const AdminPosts = () => {
       </Card>
 
       <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
-        if (!isOpen) {
-          setCurrentPost(null);
-        }
+        if (!isOpen) setCurrentPost(null);
         setIsDialogOpen(isOpen);
       }}>
         <DialogContent className="max-w-4xl max-h-[90vh] p-0 flex flex-col">
@@ -282,10 +331,6 @@ export const AdminPosts = () => {
           <div className="flex-grow overflow-y-auto">
             <PostForm post={currentPost} onSave={handleSave} categories={categories} />
           </div>
-          <DialogFooter className="p-6 border-t shrink-0">
-            <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-            <Button type="submit" form="post-form">Save</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -307,33 +352,27 @@ export const AdminPosts = () => {
   );
 };
 
-const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (post: Post) => void, categories: Category[] }) => {
-  const defaultPostState: Post = { title: '', description: '', summary: '', image_url: '', category: '', slug: '', is_pinned: false, status: 'draft' };
-  const [formData, setFormData] = useState<Post>(post || defaultPostState);
+const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (data: PostFormData) => void, categories: Category[] }) => {
+  const defaultPostState: PostFormData = {
+    title: '', description: '', summary: '', image_url: '', slug: '', is_pinned: false, status: 'draft', category_ids: []
+  };
+  
+  const [formData, setFormData] = useState<PostFormData>(defaultPostState);
 
   useEffect(() => {
-    setFormData(post || defaultPostState);
+    if (post) {
+      setFormData({
+        ...post,
+        category_ids: post.categories.map(c => c.id.toString()),
+      });
+    } else {
+      setFormData(defaultPostState);
+    }
   }, [post]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleDescriptionChange = (value: string) => {
-    setFormData(prev => ({ ...prev, description: value }));
-  };
-
-  const handleCategoryChange = (value: string) => {
-    setFormData(prev => ({ ...prev, category: value }));
-  };
-
-  const handleStatusChange = (value: 'draft' | 'published') => {
-    setFormData(prev => ({ ...prev, status: value }));
-  };
-
-  const handlePinChange = (checked: boolean) => {
-    setFormData(prev => ({ ...prev, is_pinned: checked }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -359,21 +398,17 @@ const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (po
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Category</Label>
-          <Select onValueChange={handleCategoryChange} value={formData.category}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select a category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map(cat => (
-                <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label>Categories</Label>
+          <MultiSelect
+            options={categories.map(c => ({ value: c.id.toString(), label: c.name }))}
+            selected={formData.category_ids}
+            onChange={(ids) => setFormData(prev => ({ ...prev, category_ids: ids }))}
+            placeholder="Select categories..."
+          />
         </div>
         <div className="space-y-2">
           <Label>Status</Label>
-          <Select onValueChange={handleStatusChange} value={formData.status}>
+          <Select onValueChange={(value: 'draft' | 'published') => setFormData(prev => ({ ...prev, status: value }))} value={formData.status}>
             <SelectTrigger>
               <SelectValue placeholder="Select status" />
             </SelectTrigger>
@@ -390,16 +425,20 @@ const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (po
       </div>
       <div className="space-y-2">
         <Label>Full Content</Label>
-        <RichTextEditor value={formData.description} onChange={handleDescriptionChange} placeholder="Write your tutorial here..." />
+        <RichTextEditor value={formData.description} onChange={(value) => setFormData(prev => ({ ...prev, description: value }))} placeholder="Write your tutorial here..." />
       </div>
       <div className="flex items-center space-x-2 pt-2">
         <Switch
           id="is_pinned"
           checked={formData.is_pinned}
-          onCheckedChange={handlePinChange}
+          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_pinned: checked }))}
         />
         <Label htmlFor="is_pinned">Pin this post to the homepage</Label>
       </div>
+      <DialogFooter className="p-6 border-t shrink-0">
+        <Button type="button" variant="outline" onClick={() => (document.querySelector('[data-radix-dialog-trigger]') as HTMLElement)?.click()}>Cancel</Button>
+        <Button type="submit">Save</Button>
+      </DialogFooter>
     </form>
   );
 };

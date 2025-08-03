@@ -15,10 +15,10 @@ interface Post {
   summary: string;
   link: string;
   image_url: string;
-  category: string;
   slug: string;
   created_at: string;
   is_pinned: boolean;
+  categories: { name: string }[];
 }
 
 const Index = () => {
@@ -31,35 +31,29 @@ const Index = () => {
     const fetchPosts = async () => {
       setLoadingPosts(true);
 
-      // Fetch pinned posts first
       const { data: pinnedData, error: pinnedError } = await supabase
         .from('posts')
-        .select('*')
+        .select('*, categories(name)')
         .eq('is_pinned', true)
         .eq('status', 'published')
         .order('created_at', { ascending: false });
 
-      if (pinnedError) {
-        console.error('Error fetching pinned posts:', pinnedError);
-      }
+      if (pinnedError) console.error('Error fetching pinned posts:', pinnedError);
       
       const formattedPinned = (pinnedData || []).map(p => ({...p, link: `/posts/${p.slug}`}));
-      setPinnedPosts(formattedPinned);
+      setPinnedPosts(formattedPinned as Post[]);
 
-      // Now fetch the 9 most recent posts, regardless of pinned status
       const { data: recentData, error: recentError } = await supabase
         .from('posts')
-        .select('*')
+        .select('*, categories(name)')
         .eq('status', 'published')
         .order('created_at', { ascending: false })
         .limit(9);
 
-      if (recentError) {
-        console.error('Error fetching recent posts:', recentError);
-      } else {
-        const formattedRecent = (recentData || []).map(p => ({...p, link: `/posts/${p.slug}`}));
-        setRecentPosts(formattedRecent);
-      }
+      if (recentError) console.error('Error fetching recent posts:', recentError);
+      
+      const formattedRecent = (recentData || []).map(p => ({...p, link: `/posts/${p.slug}`}));
+      setRecentPosts(formattedRecent as Post[]);
 
       setLoadingPosts(false);
     };
@@ -111,6 +105,7 @@ const Index = () => {
                           link={post.link}
                           imageUrl={post.image_url}
                           date={post.created_at}
+                          categories={post.categories}
                         />
                       ))}
                     </div>
@@ -133,6 +128,7 @@ const Index = () => {
                           link={post.link}
                           imageUrl={post.image_url}
                           date={post.created_at}
+                          categories={post.categories}
                         />
                       ))}
                     </div>

@@ -1,6 +1,11 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+
+interface Category {
+  name: string;
+}
 
 interface BlogPostProps {
   title: string;
@@ -8,9 +13,10 @@ interface BlogPostProps {
   link: string;
   imageUrl: string;
   date: string;
+  categories: Category[];
 }
 
-export const BlogPost = ({ title, summary, link, imageUrl, date }: BlogPostProps) => {
+export const BlogPost = ({ title, summary, link, imageUrl, date, categories }: BlogPostProps) => {
   const formattedDate = new Date(date).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -22,6 +28,11 @@ export const BlogPost = ({ title, summary, link, imageUrl, date }: BlogPostProps
       <img src={imageUrl} alt={title} className="w-full h-48 object-cover" />
       <div className="flex flex-col flex-grow">
         <CardHeader>
+          <div className="flex flex-wrap gap-2 mb-2">
+            {categories.map((cat, index) => (
+              <Badge key={index} variant="secondary">{cat.name}</Badge>
+            ))}
+          </div>
           <CardTitle>{title}</CardTitle>
           <p className="text-sm text-muted-foreground">{formattedDate}</p>
         </CardHeader>
