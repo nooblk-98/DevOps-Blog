@@ -26,7 +26,7 @@ export const BlogPost = ({ title, summary, link, imageUrl, date }: BlogPostProps
           <p className="text-sm text-muted-foreground">{formattedDate}</p>
         </CardHeader>
         <CardContent className="flex-grow">
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
+          <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-4">
             {summary}
           </p>
         </CardContent>
