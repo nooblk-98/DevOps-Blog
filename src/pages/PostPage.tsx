@@ -13,6 +13,7 @@ interface Post {
   id: number;
   title: string;
   description: string;
+  summary: string;
   image_url: string;
   category: string;
   created_at: string;
@@ -125,6 +126,13 @@ const PostPage = () => {
                 Posted in {post.category} on {new Date(post.created_at).toLocaleDateString()}
               </p>
               {post.image_url && <img src={post.image_url} alt={post.title} className="w-full h-auto max-h-[500px] object-cover rounded-lg mb-8" />}
+              
+              {post.summary && (
+                <p className="text-xl italic text-muted-foreground my-8 border-l-4 border-border pl-4">
+                  {post.summary}
+                </p>
+              )}
+
               <div
                 className="prose prose-lg dark:prose-invert max-w-none"
                 dangerouslySetInnerHTML={{ __html: post.description }}
