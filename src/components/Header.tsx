@@ -56,6 +56,9 @@ export const Header = () => {
                   >
                     About
                   </NavLink>
+                  <Link to="/login">
+                    <Button variant="outline" className="w-full">Login as Admin</Button>
+                  </Link>
                 </nav>
               </SheetContent>
             </Sheet>
@@ -83,9 +86,12 @@ export const Header = () => {
           </nav>
         </div>
 
-        {/* Right side: Theme Toggle */}
-        <div className="flex items-center">
+        {/* Right side: Theme Toggle and Admin Login */}
+        <div className="flex items-center space-x-2">
           <ThemeToggle />
+          <Link to="/login" className="hidden md:block">
+            <Button variant="outline">Login as Admin</Button>
+          </Link>
         </div>
       </div>
     </header>
