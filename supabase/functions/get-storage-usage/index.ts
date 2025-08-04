@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const SUPABASE_ACCESS_TOKEN = Deno.env.get('SUPABASE_ACCESS_TOKEN')
+const MGMT_API_TOKEN = Deno.env.get('MGMT_API_TOKEN')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
 
 // The project ID is the subdomain of your Supabase URL
@@ -35,7 +35,7 @@ serve(async (req) => {
     // Fetch storage stats from the Supabase Management API
     const res = await fetch(`https://api.supabase.com/v1/projects/${PROJECT_ID}/storage`, {
       headers: {
-        'Authorization': `Bearer ${SUPABASE_ACCESS_TOKEN}`,
+        'Authorization': `Bearer ${MGMT_API_TOKEN}`,
         'Content-Type': 'application/json'
       }
     })
