@@ -86,16 +86,7 @@ export const AdminMedia = () => {
       showError(`Upload failed: ${error.message}`);
     } else {
       showSuccess('File uploaded successfully!');
-      // Optimistically update the UI instead of refetching
-      const { data: { publicUrl } } = supabase.storage.from('post-images').getPublicUrl(filePath);
-      const newFile: StorageFile = {
-        name: fileName,
-        id: filePath, // Use path as a temporary unique key
-        publicUrl: publicUrl,
-        path: filePath,
-        created_at: new Date().toISOString(),
-      };
-      setFiles(prevFiles => [newFile, ...prevFiles]);
+      fetchFiles(); // Re-fetch the list from the source of truth
     }
     event.target.value = '';
   };
