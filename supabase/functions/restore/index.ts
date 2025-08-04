@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
-import { ZipReader, BlobReader, TextWriter, BlobWriter } from "https://deno.land/x/zipjs@v2.7.34/index.js";
+import { unzip } from "https://deno.land/x/zip@v1.2.5/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -28,16 +28,15 @@ serve(async (req) => {
     );
 
     const backupBlob = await req.blob();
-    const zipReader = new ZipReader(new BlobReader(backupBlob));
-    const entries = await zipReader.getEntries();
+    const backupData = new Uint8Array(await backupBlob.arrayBuffer());
+    const files = await unzip(backupData);
 
     // 1. Restore Database
-    const dbEntry = entries.find(entry => entry.filename === 'database.json');
-    if (!dbEntry || !dbEntry.getData) {
+    const dbEntry = files['database.json'];
+    if (!dbEntry) {
       throw new Error('database.json not found in backup file.');
     }
-    const textWriter = new TextWriter();
-    const dbJson = await dbEntry.getData(textWriter);
+    const dbJson = new TextDecoder().decode(dbEntry);
     const dbData = JSON.parse(dbJson);
 
     const rpcParams = {
@@ -54,8 +53,6 @@ serve(async (req) => {
     }
 
     // 2. Restore Images
-    const imageEntries = entries.filter(entry => entry.filename.startsWith('images/'));
-    
     const { data: existingFiles, error: listError } = await supabase.storage.from(storageBucket).list('public');
     if (listError) throw new Error(`Could not list existing files for deletion: ${listError.message}`);
     if (existingFiles && existingFiles.length > 0) {
@@ -66,21 +63,20 @@ serve(async (req) => {
       }
     }
 
-    for (const entry of imageEntries) {
-      if (!entry.getData) continue;
-      const imageName = entry.filename.replace('images/', '');
-      if (!imageName) continue;
-      const blobWriter = new BlobWriter();
-      const imageBlob = await entry.getData(blobWriter);
-      const { error: uploadError } = await supabase.storage.from(storageBucket).upload(`public/${imageName}`, imageBlob, {
-        upsert: true,
-      });
-      if (uploadError) {
-        console.warn(`Failed to upload ${imageName}: ${uploadError.message}`);
+    for (const filePath in files) {
+      if (filePath.startsWith('images/')) {
+        const imageName = filePath.replace('images/', '');
+        if (!imageName) continue;
+        
+        const imageBlob = new Blob([files[filePath]]);
+        const { error: uploadError } = await supabase.storage.from(storageBucket).upload(`public/${imageName}`, imageBlob, {
+          upsert: true,
+        });
+        if (uploadError) {
+          console.warn(`Failed to upload ${imageName}: ${uploadError.message}`);
+        }
       }
     }
-
-    await zipReader.close();
 
     return new Response(JSON.stringify({ message: 'Restore successful' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

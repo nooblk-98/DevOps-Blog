@@ -1,11 +1,16 @@
 {
-  "extends": "@tsconfig/deno/tsconfig.json",
   "compilerOptions": {
+    "lib": ["deno.ns", "dom"],
+    "module": "esnext",
+    "target": "esnext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "types": [
       "https://esm.sh/@supabase/functions-js@2.4.1/src/edge-runtime.d.ts"
     ]
   },
-  "include": [
-    "./functions/**/*.ts"
-  ]
+  "include": ["./functions/**/*.ts"]
 }
