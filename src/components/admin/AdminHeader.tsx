@@ -70,6 +70,12 @@ export const AdminHeader = () => {
             >
               Settings
             </NavLink>
+            <NavLink
+              to="/admin/backup"
+              className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
+            >
+              Backup/Restore
+            </NavLink>
           </nav>
         </SheetContent>
       </Sheet>
