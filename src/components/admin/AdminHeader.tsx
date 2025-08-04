@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { CircleUser, Menu, Package2, Search, MessageSquare } from "lucide-react";
+import { CircleUser, Menu, Package2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -69,12 +69,6 @@ export const AdminHeader = () => {
               className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
             >
               Settings
-            </NavLink>
-            <NavLink
-              to="/admin/backup"
-              className="mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
-            >
-              Backup/Restore
             </NavLink>
           </nav>
         </SheetContent>
