@@ -1,6 +1,8 @@
+/// <reference types="https://esm.sh/@supabase/functions-js@2.4.1/src/edge-runtime.d.ts" />
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
-import { BlobReader, ZipReader, BlobWriter } from "https://deno.land/x/zipjs@v2.7.34/index.js";
+import * as zip from "https://deno.land/x/zipjs@v2.7.34/index.js";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -28,7 +30,7 @@ serve(async (req) => {
     );
 
     const backupBlob = await req.blob();
-    const zipReader = new ZipReader(new BlobReader(backupBlob));
+    const zipReader = new zip.ZipReader(new zip.BlobReader(backupBlob));
     const entries = await zipReader.getEntries();
 
     // 1. Restore Database
@@ -36,7 +38,7 @@ serve(async (req) => {
     if (!dbEntry || !dbEntry.getData) {
       throw new Error('database.json not found in backup file.');
     }
-    const textWriter = new (zipReader.writer as any).TextWriter();
+    const textWriter = new zip.TextWriter();
     const dbJson = await dbEntry.getData(textWriter);
     const dbData = JSON.parse(dbJson);
 
@@ -70,7 +72,7 @@ serve(async (req) => {
       if (!entry.getData) continue;
       const imageName = entry.filename.replace('images/', '');
       if (!imageName) continue;
-      const blobWriter = new (zipReader.writer as any).BlobWriter();
+      const blobWriter = new zip.BlobWriter();
       const imageBlob = await entry.getData(blobWriter);
       const { error: uploadError } = await supabase.storage.from(storageBucket).upload(`public/${imageName}`, imageBlob, {
         upsert: true,
