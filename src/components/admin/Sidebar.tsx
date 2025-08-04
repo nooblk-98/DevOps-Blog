@@ -1,6 +1,5 @@
 import { NavLink } from "react-router-dom";
 import { Home, Package, Users, Settings, LayoutDashboard, MessageSquare, Image } from "lucide-react";
-import { StorageUsageIndicator } from "./StorageUsageIndicator";
 
 export const Sidebar = () => {
   const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
@@ -45,7 +44,6 @@ export const Sidebar = () => {
             </NavLink>
           </nav>
         </div>
-        <StorageUsageIndicator />
       </div>
     </div>
   );
