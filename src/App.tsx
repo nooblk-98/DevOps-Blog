@@ -17,6 +17,7 @@ import { AdminPosts } from "@/pages/admin/Posts";
 import { AdminCategories } from "@/pages/admin/Categories";
 import { AdminComments } from "@/pages/admin/Comments";
 import { AdminSettings } from "@/pages/admin/Settings";
+import { AdminMedia } from "@/pages/admin/Media";
 import { SettingsProvider } from "@/context/SettingsContext";
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ const App = () => (
                   <Route path="categories" element={<AdminCategories />} />
                   <Route path="comments" element={<AdminComments />} />
                   <Route path="settings" element={<AdminSettings />} />
+                  <Route path="media" element={<AdminMedia />} />
                 </Route>
 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Home, Package, Users, Settings, LayoutDashboard, MessageSquare } from "lucide-react";
+import { Home, Package, Users, Settings, LayoutDashboard, MessageSquare, Image } from "lucide-react";
 
 export const Sidebar = () => {
   const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
@@ -34,13 +34,16 @@ export const Sidebar = () => {
               <MessageSquare className="h-4 w-4" />
               Comments
             </NavLink>
+            <NavLink to="/admin/media" className={navLinkClasses}>
+              <Image className="h-4 w-4" />
+              Media
+            </NavLink>
             <NavLink to="/admin/settings" className={navLinkClasses}>
               <Settings className="h-4 w-4" />
               Settings
             </NavLink>
           </nav>
         </div>
-        {/* Removed the "Upgrade to Pro" card */}
       </div>
     </div>
   );
