@@ -30,13 +30,11 @@ interface StorageFile {
   created_at: string;
 }
 
-const MediaLibraryTab = ({ onInsert, onClose }: { onInsert: (url: string) => void, onClose: () => void }) => {
+const MediaLibraryTab = ({ onInsert, onClose, isOpen }: { onInsert: (url: string) => void, onClose: () => void, isOpen: boolean }) => {
   const [files, setFiles] = useState<StorageFile[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!onInsert) return; // Only fetch if the dialog is open and onInsert is available
-    
     const fetchFiles = async () => {
       setLoading(true);
       const [rootList, publicList] = await Promise.all([
@@ -72,8 +70,10 @@ const MediaLibraryTab = ({ onInsert, onClose }: { onInsert: (url: string) => voi
       setLoading(false);
     };
 
-    fetchFiles();
-  }, [onInsert]);
+    if (isOpen) {
+      fetchFiles();
+    }
+  }, [isOpen]);
 
   return (
     <div className="py-4">
@@ -147,7 +147,7 @@ export const ImageUploadDialog = ({ isOpen, onClose, onInsert }: ImageUploadDial
             <TabsTrigger value="upload">Upload</TabsTrigger>
           </TabsList>
           <TabsContent value="library">
-            <MediaLibraryTab onInsert={handleSelectFromLibrary} onClose={onClose} />
+            <MediaLibraryTab onInsert={handleSelectFromLibrary} onClose={onClose} isOpen={isOpen} />
           </TabsContent>
           <TabsContent value="url">
             <div className="py-4 space-y-2">
