@@ -33,35 +33,23 @@ export const AdminMedia = () => {
 
   const fetchFiles = async () => {
     setLoading(true);
-    const [rootList, publicList] = await Promise.all([
-      supabase.storage.from('post-images').list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' } }),
-      supabase.storage.from('post-images').list('public', { limit: 100, sortBy: { column: 'created_at', order: 'desc' } })
-    ]);
+    const { data, error } = await supabase.storage
+      .from('post-images')
+      .list('public', { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
 
-    if (rootList.error || publicList.error) {
+    if (error) {
       showError('Failed to fetch media files.');
-      console.error(rootList.error || publicList.error);
+      console.error(error);
+      setFiles([]);
     } else {
-      const fileMap = new Map<string, StorageFile>();
-
-      const processFiles = (files: any[], prefix = '') => {
-        files
-          .filter((file: any) => file.id !== null)
-          .forEach((file: any) => {
-            const path = `${prefix}${file.name}`;
-            const { data: { publicUrl } } = supabase.storage.from('post-images').getPublicUrl(path);
-            fileMap.set(path, { ...file, publicUrl, path });
-          });
-      };
-
-      processFiles(rootList.data || []);
-      processFiles(publicList.data || [], 'public/');
-      
-      const allFiles = Array.from(fileMap.values()).sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-
-      setFiles(allFiles);
+      const allFiles = (data || [])
+        .filter((file) => file.id !== null) // Filter out folders
+        .map((file) => {
+          const path = `public/${file.name}`;
+          const { data: { publicUrl } } = supabase.storage.from('post-images').getPublicUrl(path);
+          return { ...file, publicUrl, path, id: file.id!, created_at: file.created_at! };
+        });
+      setFiles(allFiles as StorageFile[]);
     }
     setLoading(false);
   };
@@ -86,7 +74,16 @@ export const AdminMedia = () => {
       showError(`Upload failed: ${error.message}`);
     } else {
       showSuccess('File uploaded successfully!');
-      fetchFiles(); // Re-fetch the list from the source of truth
+      // Optimistically update the UI
+      const { data: { publicUrl } } = supabase.storage.from('post-images').getPublicUrl(filePath);
+      const newFile: StorageFile = {
+        name: fileName,
+        id: filePath, // Use path as a temporary unique key until next fetch
+        publicUrl: publicUrl,
+        path: filePath,
+        created_at: new Date().toISOString(),
+      };
+      setFiles(prevFiles => [newFile, ...prevFiles]);
     }
     event.target.value = '';
   };
