@@ -46,6 +46,7 @@ import { Link } from 'react-router-dom';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { DateRange } from 'react-day-picker';
 import { MultiSelect } from '@/components/ui/multi-select';
+import { ImageUploadDialog } from '@/components/ImageUploadDialog';
 
 interface Category {
   id: number;
@@ -352,7 +353,7 @@ export const AdminPosts = () => {
             <DialogTitle>{currentPost?.id ? 'Edit Post' : 'Create Post'}</DialogTitle>
           </DialogHeader>
           <div className="flex-grow overflow-y-auto">
-            <PostForm post={currentPost} onSave={handleSave} categories={categories} />
+            <PostForm post={currentPost} onSave={handleSave} categories={categories} onClose={() => setIsDialogOpen(false)} />
           </div>
         </DialogContent>
       </Dialog>
@@ -375,12 +376,13 @@ export const AdminPosts = () => {
   );
 };
 
-const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (data: PostFormData) => void, categories: Category[] }) => {
+const PostForm = ({ post, onSave, categories, onClose }: { post: Post | null, onSave: (data: PostFormData) => void, categories: Category[], onClose: () => void }) => {
   const defaultPostState: PostFormData = {
     title: '', description: '', summary: '', image_url: '', slug: '', is_pinned: false, status: 'draft', category_ids: [], tags_string: ''
   };
   
   const [formData, setFormData] = useState<PostFormData>(defaultPostState);
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
 
   useEffect(() => {
     if (post) {
@@ -400,74 +402,94 @@ const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (da
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleImageInsert = (url: string) => {
+    setFormData(prev => ({ ...prev, image_url: url }));
+    setIsImageDialogOpen(false);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
   };
 
   return (
-    <form id="post-form" onSubmit={handleSubmit} className="space-y-4 p-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="title">Title</Label>
-          <Input id="title" name="title" value={formData.title} onChange={handleChange} placeholder="Title" required />
+    <>
+      <form id="post-form" onSubmit={handleSubmit} className="space-y-4 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Title</Label>
+            <Input id="title" name="title" value={formData.title} onChange={handleChange} placeholder="Title" required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="slug">Slug</Label>
+            <Input id="slug" name="slug" value={formData.slug} onChange={handleChange} placeholder="Slug (e.g., my-post-title)" required />
+          </div>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="slug">Slug</Label>
-          <Input id="slug" name="slug" value={formData.slug} onChange={handleChange} placeholder="Slug (e.g., my-post-title)" required />
+          <Label>Featured Image</Label>
+          <div className="flex items-center gap-4">
+            <Input name="image_url" value={formData.image_url} onChange={handleChange} placeholder="Paste URL or select from library" required className="flex-grow" />
+            <Button type="button" variant="outline" onClick={() => setIsImageDialogOpen(true)}>Select Image</Button>
+          </div>
+          {formData.image_url && (
+            <div className="mt-2 rounded-md border p-2">
+              <img src={formData.image_url} alt="Featured image preview" className="w-full max-w-xs rounded-md" />
+            </div>
+          )}
         </div>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="image_url">Image URL</Label>
-        <Input id="image_url" name="image_url" value={formData.image_url} onChange={handleChange} placeholder="Image URL" required />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Categories</Label>
+            <MultiSelect
+              options={categories.map(c => ({ value: c.id.toString(), label: c.name }))}
+              selected={formData.category_ids}
+              onChange={(ids) => setFormData(prev => ({ ...prev, category_ids: ids }))}
+              placeholder="Select categories..."
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="tags_string">Tags (comma-separated)</Label>
+            <Input id="tags_string" name="tags_string" value={formData.tags_string} onChange={handleChange} placeholder="e.g., docker, ci/cd, kubernetes" />
+          </div>
+        </div>
         <div className="space-y-2">
-          <Label>Categories</Label>
-          <MultiSelect
-            options={categories.map(c => ({ value: c.id.toString(), label: c.name }))}
-            selected={formData.category_ids}
-            onChange={(ids) => setFormData(prev => ({ ...prev, category_ids: ids }))}
-            placeholder="Select categories..."
+            <Label>Status</Label>
+            <Select onValueChange={(value: 'draft' | 'published') => setFormData(prev => ({ ...prev, status: value }))} value={formData.status}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="published">Published</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        <div className="space-y-2">
+          <Label htmlFor="summary">Summary</Label>
+          <Textarea id="summary" name="summary" value={formData.summary} onChange={handleChange} placeholder="A short summary for the post card." required />
+        </div>
+        <div className="space-y-2">
+          <Label>Full Content</Label>
+          <RichTextEditor value={formData.description} onChange={(value) => setFormData(prev => ({ ...prev, description: value }))} placeholder="Write your tutorial here..." />
+        </div>
+        <div className="flex items-center space-x-2 pt-2">
+          <Switch
+            id="is_pinned"
+            checked={formData.is_pinned}
+            onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_pinned: checked }))}
           />
+          <Label htmlFor="is_pinned">Pin this post to the homepage</Label>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="tags_string">Tags (comma-separated)</Label>
-          <Input id="tags_string" name="tags_string" value={formData.tags_string} onChange={handleChange} placeholder="e.g., docker, ci/cd, kubernetes" />
-        </div>
-      </div>
-       <div className="space-y-2">
-          <Label>Status</Label>
-          <Select onValueChange={(value: 'draft' | 'published') => setFormData(prev => ({ ...prev, status: value }))} value={formData.status}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="published">Published</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      <div className="space-y-2">
-        <Label htmlFor="summary">Summary</Label>
-        <Textarea id="summary" name="summary" value={formData.summary} onChange={handleChange} placeholder="A short summary for the post card." required />
-      </div>
-      <div className="space-y-2">
-        <Label>Full Content</Label>
-        <RichTextEditor value={formData.description} onChange={(value) => setFormData(prev => ({ ...prev, description: value }))} placeholder="Write your tutorial here..." />
-      </div>
-      <div className="flex items-center space-x-2 pt-2">
-        <Switch
-          id="is_pinned"
-          checked={formData.is_pinned}
-          onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_pinned: checked }))}
-        />
-        <Label htmlFor="is_pinned">Pin this post to the homepage</Label>
-      </div>
-      <DialogFooter className="p-6 border-t shrink-0">
-        <Button type="button" variant="outline" onClick={() => (document.querySelector('[data-radix-dialog-trigger]') as HTMLElement)?.click()}>Cancel</Button>
-        <Button type="submit">Save</Button>
-      </DialogFooter>
-    </form>
+        <DialogFooter className="p-6 border-t shrink-0">
+          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <Button type="submit">Save</Button>
+        </DialogFooter>
+      </form>
+      <ImageUploadDialog
+        isOpen={isImageDialogOpen}
+        onClose={() => setIsImageDialogOpen(false)}
+        onInsert={handleImageInsert}
+      />
+    </>
   );
 };
