@@ -1,5 +1,4 @@
-import { serve } from "https://deno.land/std@0.208.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.53.0'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
 import { zip } from "https://deno.land/x/zip@v1.2.5/mod.ts";
 
 const corsHeaders = {
@@ -17,7 +16,7 @@ const tablesToBackup = [
 
 const storageBucket = 'post-images';
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
