@@ -1,8 +1,6 @@
-/// <reference types="https://esm.sh/@supabase/functions-js@2.4.1/src/edge-runtime.d.ts" />
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0'
-import * as zip from "https://deno.land/x/zipjs@v2.7.34/index.js";
+import { ZipWriter, BlobReader, BlobWriter } from "https://deno.land/x/zipjs@v2.7.34/index.js";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,7 +28,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const zipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"));
+    const zipWriter = new ZipWriter(new BlobWriter("application/zip"));
 
     // 1. Backup database tables
     const dbBackup: { [key: string]: any[] } = {};
@@ -41,7 +39,7 @@ serve(async (req) => {
     }
     
     const dbBlob = new Blob([JSON.stringify(dbBackup, null, 2)], { type: 'application/json' });
-    await zipWriter.add("database.json", new zip.BlobReader(dbBlob));
+    await zipWriter.add("database.json", new BlobReader(dbBlob));
 
     // 2. Backup storage files
     const { data: fileList, error: listError } = await supabase.storage.from(storageBucket).list('public', {
@@ -58,7 +56,7 @@ serve(async (req) => {
           continue;
         }
         if (fileData) {
-          await zipWriter.add(`images/${file.name}`, new zip.BlobReader(fileData));
+          await zipWriter.add(`images/${file.name}`, new BlobReader(fileData));
         }
       }
     }
