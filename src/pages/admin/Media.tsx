@@ -21,6 +21,8 @@ interface StorageFile {
   name: string;
   id: string;
   publicUrl: string;
+  path: string;
+  created_at: string;
 }
 
 export const AdminMedia = () => {
@@ -31,21 +33,35 @@ export const AdminMedia = () => {
 
   const fetchFiles = async () => {
     setLoading(true);
-    const { data, error } = await supabase.storage.from('post-images').list('', {
-      limit: 100,
-      sortBy: { column: 'created_at', order: 'desc' },
-    });
+    const [rootList, publicList] = await Promise.all([
+      supabase.storage.from('post-images').list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' } }),
+      supabase.storage.from('post-images').list('public', { limit: 100, sortBy: { column: 'created_at', order: 'desc' } })
+    ]);
 
-    if (error) {
+    if (rootList.error || publicList.error) {
       showError('Failed to fetch media files.');
-      console.error(error);
+      console.error(rootList.error || publicList.error);
     } else {
-      const imageFiles = data.filter(file => file.id !== null);
-      const fileList = imageFiles.map(file => {
-        const { data: { publicUrl } } = supabase.storage.from('post-images').getPublicUrl(file.name);
-        return { ...file, publicUrl };
-      });
-      setFiles(fileList);
+      const fileMap = new Map<string, StorageFile>();
+
+      const processFiles = (files: any[], prefix = '') => {
+        files
+          .filter((file: any) => file.id !== null)
+          .forEach((file: any) => {
+            const path = `${prefix}${file.name}`;
+            const { data: { publicUrl } } = supabase.storage.from('post-images').getPublicUrl(path);
+            fileMap.set(path, { ...file, publicUrl, path });
+          });
+      };
+
+      processFiles(rootList.data || []);
+      processFiles(publicList.data || [], 'public/');
+      
+      const allFiles = Array.from(fileMap.values()).sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setFiles(allFiles);
     }
     setLoading(false);
   };
@@ -61,7 +77,7 @@ export const AdminMedia = () => {
     setUploading(true);
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = fileName;
+    const filePath = `public/${fileName}`;
 
     const { error } = await supabase.storage.from('post-images').upload(filePath, file);
     setUploading(false);
@@ -72,7 +88,6 @@ export const AdminMedia = () => {
       showSuccess('File uploaded successfully!');
       fetchFiles();
     }
-    // Reset file input
     event.target.value = '';
   };
 
@@ -83,7 +98,7 @@ export const AdminMedia = () => {
 
   const handleDelete = async () => {
     if (!fileToDelete) return;
-    const { error } = await supabase.storage.from('post-images').remove([fileToDelete.name]);
+    const { error } = await supabase.storage.from('post-images').remove([fileToDelete.path]);
     if (error) {
       showError(`Failed to delete file: ${error.message}`);
     } else {
