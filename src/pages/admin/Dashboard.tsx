@@ -1,17 +1,29 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, Users, Activity, MessageSquare } from "lucide-react";
+import { Package, Users, Activity, MessageSquare, Eye } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
 export const AdminDashboard = () => {
-  const [stats, setStats] = useState({ posts: 0, categories: 0, comments: 0 });
+  const [stats, setStats] = useState({ posts: 0, categories: 0, comments: 0, views: 0 });
 
   useEffect(() => {
     const fetchStats = async () => {
       const { count: postsCount } = await supabase.from('posts').select('*', { count: 'exact', head: true });
       const { count: categoriesCount } = await supabase.from('categories').select('*', { count: 'exact', head: true });
       const { count: commentsCount } = await supabase.from('comments').select('*', { count: 'exact', head: true });
-      setStats({ posts: postsCount || 0, categories: categoriesCount || 0, comments: commentsCount || 0 });
+      
+      const { data: viewsData, error: viewsError } = await supabase.from('post_views').select('view_count');
+      let totalViews = 0;
+      if (!viewsError && viewsData) {
+        totalViews = viewsData.reduce((acc, item) => acc + item.view_count, 0);
+      }
+
+      setStats({ 
+        posts: postsCount || 0, 
+        categories: categoriesCount || 0, 
+        comments: commentsCount || 0,
+        views: totalViews 
+      });
     };
     fetchStats();
   }, []);
@@ -51,14 +63,11 @@ export const AdminDashboard = () => {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Site Activity</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Total Views</CardTitle>
+            <Eye className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+573</div>
-            <p className="text-xs text-muted-foreground">
-              +20.1% from last month
-            </p>
+            <div className="text-2xl font-bold">{stats.views}</div>
           </CardContent>
         </Card>
       </div>

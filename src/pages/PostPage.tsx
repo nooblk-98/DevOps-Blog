@@ -11,6 +11,7 @@ import { showSuccess, showError } from '@/utils/toast';
 import { CommentsSection } from '@/components/CommentsSection';
 import { Session } from '@supabase/supabase-js';
 import { Badge } from '@/components/ui/badge';
+import { RelatedPosts } from '@/components/RelatedPosts';
 
 interface Post {
   id: number;
@@ -22,6 +23,7 @@ interface Post {
   slug: string;
   status: 'draft' | 'published';
   categories: { name: string }[];
+  tags: { id: number; name: string }[];
 }
 
 const PostPage = () => {
@@ -50,14 +52,20 @@ const PostPage = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('posts')
-        .select('*, categories(name)')
+        .select('*, categories(name), tags(id, name)')
         .eq('slug', slug)
         .single();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching post:', error);
+      } else if (data) {
+        setPost(data as Post | null);
+        if (data.status === 'published') {
+          await supabase.rpc('increment_post_view', { post_id_to_increment: data.id });
+        }
+      } else {
+        setPost(null);
       }
-      setPost(data as Post | null);
       setLoading(false);
     };
     fetchPost();
@@ -67,31 +75,21 @@ const PostPage = () => {
     if (post) {
       const codeBlocks = document.querySelectorAll<HTMLPreElement>('article pre');
       codeBlocks.forEach(pre => {
-        // Check if the parent is already a wrapper we created
         if (pre.parentElement?.classList.contains('code-block-wrapper')) {
           return;
         }
-
-        // Create a wrapper div
         const wrapper = document.createElement('div');
         wrapper.className = 'code-block-wrapper relative';
-
-        // Replace the <pre> with the wrapper and move <pre> inside it
         pre.parentNode?.insertBefore(wrapper, pre);
         wrapper.appendChild(pre);
-
         const code = pre.querySelector('code');
         if (!code) return;
-
         const button = document.createElement('button');
         button.className = 'copy-code-button absolute top-2 right-2 p-1.5 rounded-md bg-gray-800 text-gray-300 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors z-10';
         button.setAttribute('aria-label', 'Copy code to clipboard');
-
         const copyIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>`;
         const checkIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-        
         button.innerHTML = copyIconSVG;
-
         button.addEventListener('click', () => {
           navigator.clipboard.writeText(code.innerText)
             .then(() => {
@@ -106,7 +104,6 @@ const PostPage = () => {
               console.error('Failed to copy code:', err);
             });
         });
-
         wrapper.appendChild(button);
       });
     }
@@ -127,12 +124,8 @@ const PostPage = () => {
       case 'linkedin':
         url = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareTitle)}`;
         break;
-      default:
-        break;
     }
-    if (url) {
-      window.open(url, '_blank', 'noopener,noreferrer');
-    }
+    if (url) window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   const canViewPost = post && (post.status === 'published' || (post.status === 'draft' && session));
@@ -158,14 +151,22 @@ const PostPage = () => {
                   </div>
                 )}
                 <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">{post.title}</h1>
-                <div className="flex items-center gap-4 text-muted-foreground mb-8">
+                <div className="flex flex-col gap-4 text-muted-foreground mb-8">
                   <span>Posted on {new Date(post.created_at).toLocaleDateString()}</span>
-                  <div className="flex flex-wrap gap-2">
-                    <span>in</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span>Categories:</span>
                     {post.categories.map((cat, index) => (
-                      <Badge key={index} variant="outline">{cat.name}</Badge>
+                      <Badge key={index} variant="secondary">{cat.name}</Badge>
                     ))}
                   </div>
+                  {post.tags.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span>Tags:</span>
+                      {post.tags.map((tag) => (
+                        <Badge key={tag.id} variant="outline">{tag.name}</Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 {post.image_url && <img src={post.image_url} alt={post.title} className="w-full h-auto max-h-[500px] object-cover rounded-lg mb-8" />}
                 
@@ -182,34 +183,22 @@ const PostPage = () => {
                 {socialSharing.enabled && (
                   <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700 flex items-center justify-center space-x-4">
                     <span className="text-lg font-medium text-gray-700 dark:text-gray-300">Share this post:</span>
-                    <Button variant="outline" size="icon" onClick={() => handleShare('twitter')}>
-                      <Twitter className="h-5 w-5" />
-                      <span className="sr-only">Share on Twitter</span>
-                    </Button>
-                    <Button variant="outline" size="icon" onClick={() => handleShare('facebook')}>
-                      <Facebook className="h-5 w-5" />
-                      <span className="sr-only">Share on Facebook</span>
-                    </Button>
-                    <Button variant="outline" size="icon" onClick={() => handleShare('linkedin')}>
-                      <Linkedin className="h-5 w-5" />
-                      <span className="sr-only">Share on LinkedIn</span>
-                    </Button>
+                    <Button variant="outline" size="icon" onClick={() => handleShare('twitter')}><Twitter className="h-5 w-5" /></Button>
+                    <Button variant="outline" size="icon" onClick={() => handleShare('facebook')}><Facebook className="h-5 w-5" /></Button>
+                    <Button variant="outline" size="icon" onClick={() => handleShare('linkedin')}><Linkedin className="h-5 w-5" /></Button>
                   </div>
                 )}
               </article>
               <div className="max-w-3xl mx-auto">
+                <RelatedPosts currentPostId={post.id} tags={post.tags} />
                 <CommentsSection postId={post.id} />
               </div>
             </>
           ) : (
             <div className="text-center py-10">
               <h1 className="text-4xl font-bold">Post Not Found</h1>
-              <p className="mt-4 text-lg text-muted-foreground">
-                The post you are looking for does not exist or may have been moved.
-              </p>
-              <Link to="/posts" className="mt-6 inline-block">
-                <Button>Back to All Posts</Button>
-              </Link>
+              <p className="mt-4 text-lg text-muted-foreground">The post you are looking for does not exist or may have been moved.</p>
+              <Link to="/posts" className="mt-6 inline-block"><Button>Back to All Posts</Button></Link>
             </div>
           )}
         </div>

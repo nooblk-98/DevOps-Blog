@@ -52,6 +52,11 @@ interface Category {
   name: string;
 }
 
+interface Tag {
+  id: number;
+  name: string;
+}
+
 interface Post {
   id?: number;
   title: string;
@@ -62,10 +67,13 @@ interface Post {
   is_pinned: boolean;
   status: 'draft' | 'published';
   categories: Category[];
+  tags: Tag[];
+  post_views: { view_count: number }[] | null;
 }
 
-interface PostFormData extends Omit<Post, 'categories'> {
+interface PostFormData extends Omit<Post, 'categories' | 'tags' | 'post_views'> {
   category_ids: string[];
+  tags_string: string;
 }
 
 export const AdminPosts = () => {
@@ -88,7 +96,7 @@ export const AdminPosts = () => {
   });
 
   const fetchPosts = async () => {
-    let query = supabase.from('posts').select('*, categories(id, name)');
+    let query = supabase.from('posts').select('*, categories(id, name), tags(id, name), post_views(view_count)');
 
     if (filters.status !== 'all') {
       query = query.eq('status', filters.status);
@@ -160,8 +168,28 @@ export const AdminPosts = () => {
   };
 
   const handleSave = async (formData: PostFormData) => {
-    const { category_ids, ...postData } = formData;
+    const { category_ids, tags_string, ...postData } = formData;
 
+    // Handle Tags
+    const tagNames = tags_string.split(',').map(t => t.trim()).filter(Boolean);
+    const tagIds = [];
+    if (tagNames.length > 0) {
+        const upsertedTags = await Promise.all(
+            tagNames.map(name => 
+                supabase.from('tags').upsert({ name }, { onConflict: 'name' }).select('id').single()
+            )
+        );
+        
+        for (const { data, error } of upsertedTags) {
+            if (error) {
+                showError(`Error saving tag: ${error.message}`);
+                return;
+            }
+            if (data) tagIds.push(data.id);
+        }
+    }
+
+    // Save Post
     const { data: savedPost, error: postError } = await supabase
       .from('posts')
       .upsert({ ...postData })
@@ -172,32 +200,24 @@ export const AdminPosts = () => {
       showError(postError.message);
       return;
     }
-
     const postId = savedPost.id;
 
-    const { error: deleteError } = await supabase
-      .from('post_categories')
-      .delete()
-      .eq('post_id', postId);
-
-    if (deleteError) {
-      showError(deleteError.message);
-      return;
+    // Handle Categories
+    const { error: deleteCatError } = await supabase.from('post_categories').delete().eq('post_id', postId);
+    if (deleteCatError) { showError(deleteCatError.message); return; }
+    if (category_ids && category_ids.length > 0) {
+      const newPostCategories = category_ids.map(catId => ({ post_id: postId, category_id: parseInt(catId, 10) }));
+      const { error: insertCatError } = await supabase.from('post_categories').insert(newPostCategories);
+      if (insertCatError) { showError(insertCatError.message); return; }
     }
 
-    if (category_ids && category_ids.length > 0) {
-      const newPostCategories = category_ids.map(catId => ({
-        post_id: postId,
-        category_id: parseInt(catId, 10),
-      }));
-      const { error: insertError } = await supabase
-        .from('post_categories')
-        .insert(newPostCategories);
-
-      if (insertError) {
-        showError(insertError.message);
-        return;
-      }
+    // Handle Tags
+    const { error: deleteTagsError } = await supabase.from('post_tags').delete().eq('post_id', postId);
+    if (deleteTagsError) { showError(deleteTagsError.message); return; }
+    if (tagIds.length > 0) {
+        const newPostTags = tagIds.map(tagId => ({ post_id: postId, tag_id: tagId }));
+        const { error: insertTagsError } = await supabase.from('post_tags').insert(newPostTags);
+        if (insertTagsError) { showError(insertTagsError.message); return; }
     }
 
     showSuccess(`Post ${formData.id ? 'updated' : 'created'} successfully!`);
@@ -283,8 +303,9 @@ export const AdminPosts = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Title</TableHead>
-                <TableHead>Categories</TableHead>
+                <TableHead>Categories & Tags</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Views</TableHead>
                 <TableHead>Pinned</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -296,6 +317,7 @@ export const AdminPosts = () => {
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {post.categories.map(cat => <Badge key={cat.id} variant="secondary">{cat.name}</Badge>)}
+                      {post.tags.map(tag => <Badge key={tag.id} variant="outline">{tag.name}</Badge>)}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -303,6 +325,7 @@ export const AdminPosts = () => {
                       {post.status}
                     </Badge>
                   </TableCell>
+                  <TableCell>{post.post_views?.[0]?.view_count || 0}</TableCell>
                   <TableCell>
                     {post.is_pinned && <Pin className="h-4 w-4 text-primary" />}
                   </TableCell>
@@ -354,17 +377,18 @@ export const AdminPosts = () => {
 
 const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (data: PostFormData) => void, categories: Category[] }) => {
   const defaultPostState: PostFormData = {
-    title: '', description: '', summary: '', image_url: '', slug: '', is_pinned: false, status: 'draft', category_ids: []
+    title: '', description: '', summary: '', image_url: '', slug: '', is_pinned: false, status: 'draft', category_ids: [], tags_string: ''
   };
   
   const [formData, setFormData] = useState<PostFormData>(defaultPostState);
 
   useEffect(() => {
     if (post) {
-      const { categories, ...restOfPost } = post;
+      const { categories, tags, post_views, ...restOfPost } = post;
       setFormData({
         ...restOfPost,
         category_ids: categories.map(c => c.id.toString()),
+        tags_string: tags.map(t => t.name).join(', '),
       });
     } else {
       setFormData(defaultPostState);
@@ -408,6 +432,11 @@ const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (da
           />
         </div>
         <div className="space-y-2">
+          <Label htmlFor="tags_string">Tags (comma-separated)</Label>
+          <Input id="tags_string" name="tags_string" value={formData.tags_string} onChange={handleChange} placeholder="e.g., docker, ci/cd, kubernetes" />
+        </div>
+      </div>
+       <div className="space-y-2">
           <Label>Status</Label>
           <Select onValueChange={(value: 'draft' | 'published') => setFormData(prev => ({ ...prev, status: value }))} value={formData.status}>
             <SelectTrigger>
@@ -419,7 +448,6 @@ const PostForm = ({ post, onSave, categories }: { post: Post | null, onSave: (da
             </SelectContent>
           </Select>
         </div>
-      </div>
       <div className="space-y-2">
         <Label htmlFor="summary">Summary</Label>
         <Textarea id="summary" name="summary" value={formData.summary} onChange={handleChange} placeholder="A short summary for the post card." required />
