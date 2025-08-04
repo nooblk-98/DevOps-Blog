@@ -31,7 +31,7 @@ export const AdminMedia = () => {
 
   const fetchFiles = async () => {
     setLoading(true);
-    const { data, error } = await supabase.storage.from('post-images').list('public', {
+    const { data, error } = await supabase.storage.from('post-images').list('', {
       limit: 100,
       sortBy: { column: 'created_at', order: 'desc' },
     });
@@ -40,8 +40,9 @@ export const AdminMedia = () => {
       showError('Failed to fetch media files.');
       console.error(error);
     } else {
-      const fileList = data.map(file => {
-        const { data: { publicUrl } } = supabase.storage.from('post-images').getPublicUrl(`public/${file.name}`);
+      const imageFiles = data.filter(file => file.id !== null);
+      const fileList = imageFiles.map(file => {
+        const { data: { publicUrl } } = supabase.storage.from('post-images').getPublicUrl(file.name);
         return { ...file, publicUrl };
       });
       setFiles(fileList);
@@ -60,7 +61,7 @@ export const AdminMedia = () => {
     setUploading(true);
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `public/${fileName}`;
+    const filePath = fileName;
 
     const { error } = await supabase.storage.from('post-images').upload(filePath, file);
     setUploading(false);
@@ -82,7 +83,7 @@ export const AdminMedia = () => {
 
   const handleDelete = async () => {
     if (!fileToDelete) return;
-    const { error } = await supabase.storage.from('post-images').remove([`public/${fileToDelete.name}`]);
+    const { error } = await supabase.storage.from('post-images').remove([fileToDelete.name]);
     if (error) {
       showError(`Failed to delete file: ${error.message}`);
     } else {

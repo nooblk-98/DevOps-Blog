@@ -7,7 +7,7 @@ export const uploadImageToSupabase = async (file: File): Promise<string | null> 
   try {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `public/${fileName}`;
+    const filePath = fileName;
 
     const { error: uploadError } = await supabase.storage
       .from('post-images')
