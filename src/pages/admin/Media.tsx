@@ -41,28 +41,33 @@ export const AdminMedia = () => {
     if (rootList.error || publicList.error) {
       showError('Failed to fetch media files.');
       console.error(rootList.error || publicList.error);
-    } else {
-      const fileMap = new Map<string, StorageFile>();
-
-      const processFiles = (files: any[], prefix = '') => {
-        files
-          .filter((file: any) => file.id !== null)
-          .forEach((file: any) => {
-            const path = `${prefix}${file.name}`;
-            const { data: { publicUrl } } = supabase.storage.from('post-images').getPublicUrl(path);
-            fileMap.set(path, { ...file, publicUrl, path });
-          });
-      };
-
-      processFiles(rootList.data || []);
-      processFiles(publicList.data || [], 'public/');
-      
-      const allFiles = Array.from(fileMap.values()).sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-
-      setFiles(allFiles);
+      setFiles([]);
+      setLoading(false);
+      return;
     }
+
+    const rootFiles = (rootList.data || [])
+      .filter(file => file.id !== null)
+      .map(file => {
+        const path = file.name;
+        const { data: { publicUrl } } = supabase.storage.from('post-images').getPublicUrl(path);
+        return { ...file, publicUrl, path, id: file.id!, created_at: file.created_at! };
+      });
+
+    const publicFiles = (publicList.data || [])
+      .filter(file => file.id !== null)
+      .map(file => {
+        const path = `public/${file.name}`;
+        const { data: { publicUrl } } = supabase.storage.from('post-images').getPublicUrl(path);
+        return { ...file, publicUrl, path, id: file.id!, created_at: file.created_at! };
+      });
+
+    const allFiles = [...rootFiles, ...publicFiles];
+    
+    const uniqueFiles = Array.from(new Map(allFiles.map(file => [file.path, file])).values());
+    uniqueFiles.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    setFiles(uniqueFiles as StorageFile[]);
     setLoading(false);
   };
 
