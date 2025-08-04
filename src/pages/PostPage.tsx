@@ -67,14 +67,24 @@ const PostPage = () => {
     if (post) {
       const codeBlocks = document.querySelectorAll<HTMLPreElement>('article pre');
       codeBlocks.forEach(pre => {
-        if (pre.querySelector('.copy-code-button')) return;
+        // Check if the parent is already a wrapper we created
+        if (pre.parentElement?.classList.contains('code-block-wrapper')) {
+          return;
+        }
 
-        pre.style.position = 'relative';
+        // Create a wrapper div
+        const wrapper = document.createElement('div');
+        wrapper.className = 'code-block-wrapper relative';
+
+        // Replace the <pre> with the wrapper and move <pre> inside it
+        pre.parentNode?.insertBefore(wrapper, pre);
+        wrapper.appendChild(pre);
+
         const code = pre.querySelector('code');
         if (!code) return;
 
         const button = document.createElement('button');
-        button.className = 'copy-code-button absolute top-2 right-2 p-1.5 rounded-md bg-gray-800 text-gray-300 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors';
+        button.className = 'copy-code-button absolute top-2 right-2 p-1.5 rounded-md bg-gray-800 text-gray-300 hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 transition-colors z-10';
         button.setAttribute('aria-label', 'Copy code to clipboard');
 
         const copyIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>`;
@@ -97,7 +107,7 @@ const PostPage = () => {
             });
         });
 
-        pre.appendChild(button);
+        wrapper.appendChild(button);
       });
     }
   }, [post]);
