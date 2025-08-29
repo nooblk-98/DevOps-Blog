@@ -4,11 +4,30 @@ on:
   push:
     branches: [ main ]
   workflow_dispatch:
+    inputs:
+      image_name:
+        description: "Override image name (e.g. myuser/myrepo)"
+        required: false
+        type: string
+      tag:
+        description: "Additional tag to push (e.g. v1.2.3)"
+        required: false
+        type: string
+      platforms:
+        description: "Target platforms"
+        required: false
+        default: "linux/amd64,linux/arm64"
+        type: string
+      push:
+        description: "Actually push image (set false to build only)"
+        required: false
+        default: true
+        type: boolean
 
 env:
   REGISTRY: docker.io
   # Image path on Docker Hub. Defaults to: <DOCKERHUB_USERNAME>/<repo>
-  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}
+  IMAGE_NAME: ${{ github.event.inputs.image_name != '' && github.event.inputs.image_name || format('{0}/{1}', secrets.DOCKERHUB_USERNAME, github.event.repository.name) }}
 
 jobs:
   build-and-push:
@@ -48,10 +67,11 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          push: true
-          platforms: linux/amd64,linux/arm64
-          tags: ${{ steps.meta.outputs.tags }}
+          push: ${{ github.event.inputs.push != '' && github.event.inputs.push || true }}
+          platforms: ${{ github.event.inputs.platforms != '' && github.event.inputs.platforms || 'linux/amd64,linux/arm64' }}
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            ${{ github.event.inputs.tag != '' && format('{0}/{1}:{2}', env.REGISTRY, env.IMAGE_NAME, github.event.inputs.tag) || '' }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
