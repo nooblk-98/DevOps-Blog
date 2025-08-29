@@ -19,6 +19,7 @@ import { AdminComments } from "@/pages/admin/Comments";
 import { AdminSettings } from "@/pages/admin/Settings";
 import { AdminMedia } from "@/pages/admin/Media";
 import { SettingsProvider } from "@/context/SettingsContext";
+import { CodeCopyEnhancer } from "@/components/CodeCopyEnhancer";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <CodeCopyEnhancer />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/posts" element={<PostsPage />} />
