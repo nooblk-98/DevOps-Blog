@@ -361,4 +361,15 @@ app.delete('/api/storage/remove', authRequired, (req, res) => {
   res.status(404).json({ error: 'Not found', path: p })
 })
 
+// Serve frontend in production (dist)
+const distDir = path.join(process.cwd(), 'dist')
+if (fs.existsSync(distDir)) {
+  app.use(express.static(distDir))
+  app.get('*', (req, res) => {
+    // Don’t handle API or uploads here
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return res.status(404).end()
+    res.sendFile(path.join(distDir, 'index.html'))
+  })
+}
+
 app.listen(PORT, () => console.log(`[server] listening on http://localhost:${PORT}`))

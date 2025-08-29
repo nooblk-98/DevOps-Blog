@@ -31,3 +31,18 @@ Notes
 - Images uploaded in the Admin are stored under `public/uploads` by the API. These are served locally via `/uploads/...`.
 - If deploying to platforms without persistent filesystem (e.g., Vercel), replace storage with S3/Cloudinary or similar.
 - The lightweight client in `src/lib/supabase.ts` emulates the subset of the Supabase API used by the UI.
+
+Docker
+
+- Build and run with Compose (recommended):
+  - `docker compose up --build -d`
+  - App: http://localhost:8080
+  - Environment overrides (optional):
+    - `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+  - Data persistence:
+    - SQLite file persisted in volume `db-data`
+    - Uploads persisted in volume `uploads`
+
+- Build/run manually with Docker:
+  - `docker build -t devops-blog .`
+  - `docker run -p 8080:8080 -e JWT_SECRET=change-me -v devops-blog-db:/app/db -v devops-blog-uploads:/app/public/uploads devops-blog`
