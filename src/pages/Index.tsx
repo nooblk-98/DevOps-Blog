@@ -71,12 +71,8 @@ const Index = () => {
           <div className="absolute inset-0 bg-black opacity-50"></div>
           <div className="relative container mx-auto px-6 md:px-8">
             <div className="text-center">
-              <h1 className="text-4xl md:text-5xl font-bold text-white">
-                {bannerSettings?.title || 'Welcome'}
-              </h1>
-              <p className="mt-4 text-lg text-gray-200">
-                {bannerSettings?.subtitle || ''}
-              </p>
+              <h1 className="text-4xl md:text-5xl font-bold text-white" dangerouslySetInnerHTML={{ __html: bannerSettings?.title || 'Welcome' }} />
+              <div className="mt-4 text-lg text-gray-200" dangerouslySetInnerHTML={{ __html: bannerSettings?.subtitle || '' }} />
             </div>
           </div>
         </section>

@@ -8,6 +8,7 @@ import { showError, showSuccess } from '@/utils/toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSettings } from '@/context/SettingsContext';
 import { RichTextEditor } from '@/components/RichTextEditor';
+import { ImageUploadDialog } from '@/components/ImageUploadDialog';
 import { Switch } from '@/components/ui/switch';
 
 interface BannerSettings {
@@ -47,6 +48,7 @@ export const AdminSettings = () => {
     instagram: { url: '', enabled: false },
   });
   const [loading, setLoading] = useState(true);
+  const [isBannerImageDialogOpen, setIsBannerImageDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -111,6 +113,11 @@ export const AdminSettings = () => {
   const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setBannerSettings(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleBannerImageInsert = (url: string) => {
+    setBannerSettings(prev => ({ ...prev, image_url: url }));
+    setIsBannerImageDialogOpen(false);
   };
 
   const handleSiteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -186,16 +193,24 @@ export const AdminSettings = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Banner Title</Label>
-                <Input id="title" name="title" value={bannerSettings.title} onChange={handleBannerChange} />
+                <Label>Banner Title</Label>
+                <RichTextEditor value={bannerSettings.title} onChange={(v) => setBannerSettings(prev => ({ ...prev, title: v }))} placeholder="Enter banner title..." />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="subtitle">Banner Subtitle</Label>
-                <Input id="subtitle" name="subtitle" value={bannerSettings.subtitle} onChange={handleBannerChange} />
+                <Label>Banner Subtitle</Label>
+                <RichTextEditor value={bannerSettings.subtitle} onChange={(v) => setBannerSettings(prev => ({ ...prev, subtitle: v }))} placeholder="Enter banner subtitle..." />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="image_url">Banner Image URL</Label>
-                <Input id="image_url" name="image_url" value={bannerSettings.image_url} onChange={handleBannerChange} />
+                <div className="flex items-center gap-3">
+                  <Input id="image_url" name="image_url" value={bannerSettings.image_url} onChange={handleBannerChange} placeholder="Paste URL or select from library" />
+                  <Button type="button" variant="outline" onClick={() => setIsBannerImageDialogOpen(true)}>Select</Button>
+                </div>
+                {bannerSettings.image_url && (
+                  <div className="mt-2 rounded-md border p-2 max-w-lg">
+                    <img src={bannerSettings.image_url} alt="Banner preview" className="w-full h-auto rounded-md" />
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -262,6 +277,7 @@ export const AdminSettings = () => {
           </div>
         </div>
       </form>
+      <ImageUploadDialog isOpen={isBannerImageDialogOpen} onClose={() => setIsBannerImageDialogOpen(false)} onInsert={handleBannerImageInsert} />
     </>
   );
 };

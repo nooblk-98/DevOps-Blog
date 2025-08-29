@@ -18,6 +18,7 @@ import {
   Image as ImageIcon,
   Palette,
   Highlighter,
+  Eraser,
   ChevronDown,
   Terminal,
   Minus,
@@ -170,6 +171,16 @@ export function EditorToolbar({ editor }: Props) {
           onChange={handleTextColorChange}
           value={editor.getAttributes('textStyle').color || lastTextColor}
         />
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().unsetColor().run()}
+          className="w-8 h-8 p-0"
+          title="Clear Text Color"
+        >
+          <Eraser className="h-4 w-4" />
+        </Button>
 
         <Button
           type="button"
@@ -188,6 +199,16 @@ export function EditorToolbar({ editor }: Props) {
           onChange={handleHighlightColorChange}
           value={editor.getAttributes('highlight').color || lastHighlightColor}
         />
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().unsetHighlight().run()}
+          className="w-8 h-8 p-0"
+          title="Clear Highlight"
+        >
+          <Eraser className="h-4 w-4" />
+        </Button>
 
         <Toggle
           size="sm"
