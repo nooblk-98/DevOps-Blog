@@ -6,7 +6,9 @@ import multer from 'multer'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import fs from 'fs'
-import db from './db.js'
+import db, { getDbFilePath, restoreFromBuffer } from './db.js'
+import archiver from 'archiver'
+import AdmZip from 'adm-zip'
 
 const app = express()
 const PORT = process.env.PORT || 5174
@@ -373,6 +375,62 @@ app.delete('/api/storage/remove', authRequired, (req, res) => {
     return res.json({ success: true, removed: p })
   }
   res.status(404).json({ error: 'Not found', path: p })
+})
+
+// =========================
+// Admin: Backup and Restore
+// =========================
+app.get('/api/admin/backup', authRequired, (req, res) => {
+  const dbPath = getDbFilePath()
+  if (!fs.existsSync(dbPath)) return res.status(404).json({ error: 'Database file not found' })
+  const filename = `backup-${new Date().toISOString().replace(/[:.]/g,'-')}.zip`
+  res.setHeader('Content-Type', 'application/zip')
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+
+  const archive = archiver('zip', { zlib: { level: 9 } })
+  archive.on('error', (err) => { try { res.status(500).end() } catch {} })
+  archive.pipe(res)
+  // Add database
+  archive.file(dbPath, { name: 'db/data.sqlite' })
+  // Add uploads directory (if exists)
+  if (fs.existsSync(uploadsDir)) {
+    archive.directory(uploadsDir, 'uploads')
+  }
+  archive.finalize()
+})
+
+const restoreUpload = multer({ storage: multer.memoryStorage() })
+app.post('/api/admin/restore', authRequired, restoreUpload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
+    const buffer = req.file.buffer
+    // If ZIP, extract db + uploads
+    const isZip = req.file.originalname?.toLowerCase().endsWith('.zip') || req.file.mimetype === 'application/zip'
+    if (isZip) {
+      const zip = new AdmZip(buffer)
+      // Extract DB
+      const dbEntry = zip.getEntries().find(e => /(^|\/)data\.sqlite$/.test(e.entryName))
+      if (dbEntry) {
+        await restoreFromBuffer(dbEntry.getData())
+      }
+      // Extract uploads
+      const entries = zip.getEntries().filter(e => e.entryName.startsWith('uploads/') && !e.isDirectory)
+      entries.forEach(e => {
+        const rel = e.entryName.replace(/^uploads\//,'')
+        const out = path.join(uploadsDir, rel)
+        const dir = path.dirname(out)
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+        fs.writeFileSync(out, e.getData())
+      })
+    } else {
+      // Assume raw sqlite
+      await restoreFromBuffer(buffer)
+    }
+    res.json({ success: true })
+  } catch (e) {
+    console.error('Restore failed', e)
+    res.status(500).json({ error: 'Restore failed' })
+  }
 })
 
 // Serve frontend in production (dist)

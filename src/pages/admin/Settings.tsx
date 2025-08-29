@@ -52,6 +52,8 @@ export const AdminSettings = () => {
   const [isBannerImageDialogOpen, setIsBannerImageDialogOpen] = useState(false);
   const [isLogoDialogOpen, setIsLogoDialogOpen] = useState(false);
   const [isFaviconDialogOpen, setIsFaviconDialogOpen] = useState(false);
+  const [busyBackup, setBusyBackup] = useState(false);
+  const [busyRestore, setBusyRestore] = useState(false);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -255,6 +257,62 @@ export const AdminSettings = () => {
             </CardHeader>
             <CardContent>
               <RichTextEditor value={aboutContent} onChange={setAboutContent} placeholder="Write your About Us content here..." />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Backup & Restore</CardTitle>
+              <CardDescription>Download a backup of your database or restore from a previous backup.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap gap-3 items-center">
+                <Button type="button" variant="outline" disabled={busyBackup} onClick={async () => {
+                  try {
+                    setBusyBackup(true)
+                    const resp = await fetch('/api/admin/backup', { credentials: 'include' })
+                    if (!resp.ok) throw new Error('Backup failed')
+                    const blob = await resp.blob()
+                    const url = URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = url
+                    // Try to use server-provided filename if present
+                    const cd = resp.headers.get('Content-Disposition') || ''
+                    const m = cd.match(/filename="?([^";]+)"?/i)
+                    const fallback = `backup-${new Date().toISOString().replace(/[:.]/g,'-')}.zip`
+                    a.download = (m && m[1]) || fallback
+                    document.body.appendChild(a)
+                    a.click()
+                    a.remove()
+                    URL.revokeObjectURL(url)
+                  } catch {
+                    showError('Failed to download backup')
+                  } finally {
+                    setBusyBackup(false)
+                  }
+                }}>Download Backup</Button>
+
+                <div>
+                  <input id="restore-file" type="file" className="sr-only" accept=".sqlite,.db,application/octet-stream" onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    try {
+                      setBusyRestore(true)
+                      const form = new FormData()
+                      form.append('file', file)
+                      const resp = await fetch('/api/admin/restore', { method: 'POST', credentials: 'include', body: form })
+                      if (!resp.ok) throw new Error('Restore failed')
+                      showSuccess('Database restored successfully')
+                    } catch {
+                      showError('Failed to restore backup')
+                    } finally {
+                      setBusyRestore(false)
+                      e.currentTarget.value = ''
+                    }
+                  }} />
+                  <Button type="button" variant="destructive" disabled={busyRestore} onClick={() => document.getElementById('restore-file')?.click()}>Restore from File</Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
 

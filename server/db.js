@@ -122,3 +122,13 @@ function migrate() {
 }
 
 export default { init, run, all, get }
+
+// Named exports for admin/ops
+export const getDbFilePath = () => DB_FILE
+export async function restoreFromBuffer(buffer) {
+  if (!SQL) {
+    SQL = await initSqlJs({ locateFile: (file) => path.join(process.cwd(), 'node_modules', 'sql.js', 'dist', file) })
+  }
+  db = new SQL.Database(buffer)
+  persist()
+}
