@@ -365,9 +365,11 @@ app.delete('/api/storage/remove', authRequired, (req, res) => {
 const distDir = path.join(process.cwd(), 'dist')
 if (fs.existsSync(distDir)) {
   app.use(express.static(distDir))
-  app.get('*', (req, res) => {
-    // Don’t handle API or uploads here
-    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return res.status(404).end()
+  // Express 5 uses path-to-regexp v8 which no longer supports '*' patterns.
+  // Use a catch-all middleware instead and skip API/uploads.
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next()
+    if (req.method !== 'GET') return next()
     res.sendFile(path.join(distDir, 'index.html'))
   })
 }
