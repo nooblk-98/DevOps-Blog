@@ -26,7 +26,8 @@ RUN pnpm install --prod --frozen-lockfile
 
 # Copy server code and built frontend
 COPY server ./server
-COPY dist ./dist
+# Copy built frontend from the builder stage
+COPY --from=builder /app/dist ./dist
 
 # Create runtime dirs for db and uploads
 RUN mkdir -p /app/db /app/public/uploads
@@ -34,11 +35,7 @@ RUN mkdir -p /app/db /app/public/uploads
 # Expose app port
 EXPOSE 8080
 
-# Environment defaults (override in compose/production)
-ENV PORT=8080 \
-    JWT_SECRET=change-me \
-    ADMIN_EMAIL=admin@example.com \
-    ADMIN_PASSWORD=admin123
+# Environment defaults (override at runtime)
+ENV PORT=8080
 
 CMD ["node", "server/index.js"]
-
