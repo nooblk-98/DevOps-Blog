@@ -321,21 +321,44 @@ app.post('/api/posts/:id/increment_view', (req, res) => {
 })
 
 // Media storage
-const storage = multer({ dest: uploadsDir })
-app.get('/api/storage/list', authRequired, (req, res) => {
+const disk = multer.diskStorage({
+  destination: function (_req, _file, cb) { cb(null, uploadsDir) },
+  filename: function (_req, file, cb) {
+    const ext = path.extname(file.originalname || '')
+    const name = `${Date.now()}${ext}`
+    cb(null, name)
+  }
+})
+const storage = multer({ storage: disk })
+app.get('/api/storage/list', authRequired, (_req, res) => {
   const files = fs.readdirSync(uploadsDir)
-  res.json({ data: files.map(f => ({ name: f, path: `uploads/${f}` })) })
+  const rows = files.map(f => {
+    const full = path.join(uploadsDir, f)
+    const stat = fs.statSync(full)
+    return { id: f, name: f, path: `uploads/${f}`, created_at: stat.mtime.toISOString() }
+  })
+  // newest first
+  rows.sort((a,b)=> new Date(b.created_at) - new Date(a.created_at))
+  res.json({ data: rows })
 })
 app.post('/api/storage/upload', authRequired, storage.single('file'), (req, res) => {
   const file = req.file
   if (!file) return res.status(400).json({ error: 'No file' })
-  res.json({ path: `uploads/${file.filename}` })
+  const stat = fs.statSync(file.path)
+  res.json({ path: `uploads/${file.filename}`, id: file.filename, name: file.originalname, created_at: stat.mtime.toISOString() })
 })
 app.delete('/api/storage/remove', authRequired, (req, res) => {
-  const { path: p } = req.body
+  let p = (req.body && req.body.path) || (req.query && req.query.path)
+  if (!p) return res.status(400).json({ error: 'No path' })
+  p = String(p).replace(/^\//,'')
+  if (!p.startsWith('uploads/')) p = p.replace(/^public\//, '')
+  if (!p.startsWith('uploads/')) p = `uploads/${p}`
   const full = path.join(process.cwd(), 'public', p)
-  if (fs.existsSync(full)) fs.unlinkSync(full)
-  res.json({ success: true })
+  if (fs.existsSync(full)) {
+    fs.unlinkSync(full)
+    return res.json({ success: true, removed: p })
+  }
+  res.status(404).json({ error: 'Not found', path: p })
 })
 
 app.listen(PORT, () => console.log(`[server] listening on http://localhost:${PORT}`))

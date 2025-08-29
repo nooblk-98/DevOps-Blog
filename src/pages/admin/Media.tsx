@@ -47,19 +47,19 @@ export const AdminMedia = () => {
     }
 
     const rootFiles = (rootList.data || [])
-      .filter(file => file.id !== null)
-      .map(file => {
-        const path = file.name;
+      .filter((file: any) => file.id !== null)
+      .map((file: any) => {
+        const path = (file as any).path || file.name;
         const { data: { publicUrl } } = supabase.storage.from('post-images').getPublicUrl(path);
-        return { ...file, publicUrl, path, id: file.id!, created_at: file.created_at! };
+        return { ...file, publicUrl, path, id: file.id!, created_at: file.created_at! } as any;
       });
 
     const publicFiles = (publicList.data || [])
-      .filter(file => file.id !== null)
-      .map(file => {
-        const path = `public/${file.name}`;
+      .filter((file: any) => file.id !== null)
+      .map((file: any) => {
+        const path = (file as any).path || `public/${file.name}`;
         const { data: { publicUrl } } = supabase.storage.from('post-images').getPublicUrl(path);
-        return { ...file, publicUrl, path, id: file.id!, created_at: file.created_at! };
+        return { ...file, publicUrl, path, id: file.id!, created_at: file.created_at! } as any;
       });
 
     const allFiles = [...rootFiles, ...publicFiles];

@@ -238,20 +238,31 @@ export const supabase = {
     from(_bucket: string) {
       return {
         list: async (prefix = '', _opts?: any) => {
+          // If asking for 'public' folder, we return empty to avoid duplicates,
+          // since our storage does not use subfolders.
+          if (prefix && prefix.startsWith('public')) {
+            return { data: [], error: null }
+          }
           const resp = await fetch('/api/storage/list', { credentials:'include' })
           const json = await resp.json()
-          // Map to Supabase-like structure
-          return { data: json.data.map((f:any)=> ({ name: f.name, id: f.name, created_at: '', updated_at: '', last_accessed_at: '', metadata: null, buckets: null })), error: null }
+          return { data: (json.data || []).map((f:any)=> ({ name: f.name, id: f.id, created_at: f.created_at, path: f.path })), error: null }
         },
-        getPublicUrl: (path: string) => ({ data: { publicUrl: `/${path}` } }),
+        getPublicUrl: (path: string) => {
+          let p = String(path || '')
+          if (!p.startsWith('uploads/')) p = p.replace(/^public\//,'')
+          if (!p.startsWith('uploads/')) p = `uploads/${p}`
+          return { data: { publicUrl: `/${p}` } }
+        },
         upload: async (path: string, file: File|Blob) => {
           const form = new FormData()
           form.append('file', file)
           const resp = await fetch('/api/storage/upload', { method:'POST', credentials:'include', body: form })
-          return { data: await resp.json(), error: resp.ok? null : await resp.text() as any }
+          const json = await resp.json()
+          return { data: json, error: resp.ok? null : await resp.text() as any }
         },
         remove: async (paths: string[]) => {
-          const resp = await fetch('/api/storage/remove', { method:'DELETE', credentials:'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: paths[0] }) })
+          const p = paths[0]
+          const resp = await fetch(`/api/storage/remove?path=${encodeURIComponent(p)}`, { method:'DELETE', credentials:'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ path: p }) })
           return { data: null, error: resp.ok? null : await resp.text() as any }
         }
       }
