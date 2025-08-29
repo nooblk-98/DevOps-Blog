@@ -148,7 +148,8 @@ class Query<T=any> {
           return { data: null as any, error: resp.ok? null : await resp.text() as any }
         }
         const post_id = this.filters.find(f=>f.op==='eq' && f.col==='post_id')?.val
-        const resp = await fetch(`/api/comments?post_id=${post_id}`)
+        const url = post_id !== undefined ? `/api/comments?post_id=${post_id}` : '/api/comments'
+        const resp = await fetch(url)
         const json = await resp.json()
         return { data: json.data, error: null }
       }

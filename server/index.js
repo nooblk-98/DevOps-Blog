@@ -276,10 +276,24 @@ app.get('/api/post_tags/by_tags', (req, res) => {
 // Comments
 app.get('/api/comments', (req, res) => {
   const { post_id } = req.query
-  const rows = post_id
-    ? db.all('SELECT * FROM comments WHERE post_id=? ORDER BY created_at ASC', [parseInt(post_id)])
-    : db.all('SELECT * FROM comments ORDER BY created_at DESC')
-  res.json({ data: rows })
+  const baseSql = `SELECT c.*, p.title as post_title, p.slug as post_slug FROM comments c LEFT JOIN posts p ON p.id=c.post_id`
+  let rows
+  if (post_id !== undefined) {
+    rows = db.all(`${baseSql} WHERE c.post_id=? ORDER BY c.created_at ASC`, [parseInt(post_id)])
+  } else {
+    rows = db.all(`${baseSql} ORDER BY c.created_at DESC`)
+  }
+  const data = rows.map(r => ({
+    id: r.id,
+    post_id: r.post_id,
+    parent_id: r.parent_id,
+    author_name: r.author_name,
+    author_email: r.author_email,
+    content: r.content,
+    created_at: r.created_at,
+    posts: r.post_title ? [{ title: r.post_title, slug: r.post_slug }] : []
+  }))
+  res.json({ data })
 })
 app.post('/api/comments', (req, res) => {
   const { post_id, parent_id, content, author_name, author_email } = req.body
