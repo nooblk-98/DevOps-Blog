@@ -46,3 +46,16 @@ Docker
 - Build/run manually with Docker:
   - `docker build -t devops-blog .`
   - `docker run -p 8080:8080 -e JWT_SECRET=change-me -v devops-blog-db:/app/db -v devops-blog-uploads:/app/public/uploads devops-blog`
+
+CI/CD (GitHub Actions → Docker Hub)
+
+- Workflow: `.github/workflows/docker.yml`
+- On every push to `main`, builds a multi-arch image (linux/amd64, linux/arm64) and pushes to Docker Hub.
+- Configure repository secrets:
+  - `DOCKERHUB_USERNAME`: your Docker Hub username or org
+  - `DOCKERHUB_TOKEN`: Docker Hub access token (with write perms)
+- Image name defaults to: `<DOCKERHUB_USERNAME>/<repo>`
+- Tags pushed:
+  - `latest` on default branch
+  - SHA tag on all pushes
+  - Tag name on git tag pushes

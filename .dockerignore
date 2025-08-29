@@ -1,0 +1,14 @@
+.git
+.github
+node_modules
+dist
+db/*.sqlite
+db/data.sqlite
+public/uploads
+*.log
+Dockerfile*
+docker-compose.yml
+.DS_Store
+Thumbs.db
+**/*.swp
+**/*.swo
