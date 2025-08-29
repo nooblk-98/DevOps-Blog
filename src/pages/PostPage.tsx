@@ -151,22 +151,8 @@ const PostPage = () => {
                   </div>
                 )}
                 <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">{post.title}</h1>
-                <div className="flex flex-col gap-4 text-muted-foreground mb-8">
+                <div className="flex flex-col gap-2 text-muted-foreground mb-8">
                   <span>Posted on {new Date(post.created_at).toLocaleDateString()}</span>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span>Categories:</span>
-                    {post.categories.map((cat, index) => (
-                      <Badge key={index} variant="secondary">{cat.name}</Badge>
-                    ))}
-                  </div>
-                  {post.tags.length > 0 && (
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span>Tags:</span>
-                      {post.tags.map((tag) => (
-                        <Badge key={tag.id} variant="outline">{tag.name}</Badge>
-                      ))}
-                    </div>
-                  )}
                 </div>
                 {post.image_url && <img src={post.image_url} alt={post.title} className="w-full h-auto max-h-[500px] object-cover rounded-lg mb-8" />}
                 
@@ -180,6 +166,23 @@ const PostPage = () => {
                   className="prose prose-lg dark:prose-invert max-w-none"
                   dangerouslySetInnerHTML={{ __html: post.description }}
                 />
+                {/* Bottom meta: categories and tags */}
+                <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-muted-foreground">Categories:</span>
+                    {post.categories.map((cat, index) => (
+                      <Badge key={index} variant="secondary">{cat.name}</Badge>
+                    ))}
+                  </div>
+                  {post.tags.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-muted-foreground">Tags:</span>
+                      {post.tags.map((tag) => (
+                        <Badge key={tag.id} variant="outline">{tag.name}</Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 {socialSharing.enabled && (
                   <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700 flex items-center justify-center space-x-4">
                     <span className="text-lg font-medium text-gray-700 dark:text-gray-300">Share this post:</span>
