@@ -59,3 +59,17 @@ CI/CD (GitHub Actions → Docker Hub)
   - `latest` on default branch
   - SHA tag on all pushes
   - Tag name on git tag pushes
+
+Production compose (prebuilt image)
+
+- A ready-to-run compose file using your Docker Hub image is provided: `docker-compose.prod.yml`.
+- Usage:
+  - Create a `.env` next to the file with at least:
+    - `JWT_SECRET=your-strong-secret`
+    - Optional (first run only): `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+  - Bring up the service:
+    - `docker compose -f docker-compose.prod.yml up -d`
+  - App: http://localhost:8080
+  - Data persistence:
+    - DB volume: `db-data`
+    - Uploads volume: `uploads`
