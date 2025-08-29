@@ -9,7 +9,7 @@ export const uploadImageToSupabase = async (file: File): Promise<string | null> 
     const fileName = `${Date.now()}.${fileExt}`;
     const filePath = `public/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError, data: uploadData } = await supabase.storage
       .from('post-images')
       .upload(filePath, file);
 
@@ -17,9 +17,12 @@ export const uploadImageToSupabase = async (file: File): Promise<string | null> 
       throw uploadError;
     }
 
-    const { data } = supabase.storage
-      .from('post-images')
-      .getPublicUrl(filePath);
+    // Prefer server-returned path when available
+    if (uploadData && (uploadData as any).path) {
+      dismissToast(toastId);
+      return `/${(uploadData as any).path}`;
+    }
+    const { data } = supabase.storage.from('post-images').getPublicUrl(filePath);
     
     dismissToast(toastId);
     return data.publicUrl;

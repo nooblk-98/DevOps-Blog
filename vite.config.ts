@@ -7,6 +7,10 @@ export default defineConfig(() => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      '/api': 'http://localhost:5174',
+      '/uploads': 'http://localhost:5174'
+    }
   },
   plugins: [dyadComponentTagger(), react()],
   resolve: {

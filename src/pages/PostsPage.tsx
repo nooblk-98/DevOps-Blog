@@ -19,6 +19,8 @@ interface Post {
   categories: { name: string }[];
 }
 
+interface Category { id: number; name: string }
+
 const POSTS_PER_PAGE = 6;
 
 const PostsPage = () => {
@@ -27,7 +29,7 @@ const PostsPage = () => {
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   const fetchPosts = useCallback(async (page: number, categoryFilter: string = "All") => {
@@ -41,17 +43,19 @@ const PostsPage = () => {
       .order('created_at', { ascending: false });
 
     if (categoryFilter !== "All") {
-      const { data: postIds, error: postIdsError } = await supabase
-        .from('post_categories')
-        .select('post_id, categories!inner(name)')
-        .eq('categories.name', categoryFilter);
-
-      if (postIdsError) {
-        console.error('Error fetching post IDs for category', postIdsError);
-        setHasMore(false);
-      } else {
-        const ids = postIds.map(p => p.post_id);
-        query = query.in('id', ids);
+      const cat = categories.find(c => c.name === categoryFilter)
+      if (cat) {
+        const { data: postIds, error: postIdsError } = await supabase
+          .from('post_categories')
+          .select('post_id')
+          .eq('category_id', cat.id);
+        if (postIdsError) {
+          console.error('Error fetching post IDs for category', postIdsError);
+          setHasMore(false);
+        } else {
+          const ids = postIds.map((p: any) => p.post_id);
+          query = query.in('id', ids);
+        }
       }
     }
 
@@ -69,11 +73,11 @@ const PostsPage = () => {
   }, []);
 
   const fetchCategories = useCallback(async () => {
-    const { data, error } = await supabase.from('categories').select('name');
+    const { data, error } = await supabase.from('categories').select('*');
     if (error) {
       console.error('Error fetching categories:', error);
     } else {
-      setCategories(["All", ...Array.from(new Set(data.map(c => c.name)))]);
+      setCategories((data || []) as any);
     }
   }, []);
 
@@ -109,7 +113,7 @@ const PostsPage = () => {
               All Posts
             </h1>
             <div className="mt-6 flex justify-center flex-wrap gap-2 mb-6">
-              {categories.map((category) => (
+              {["All", ...categories.map(c => c.name)].map((category) => (
                 <Button
                   key={category}
                   variant={selectedCategory === category ? "default" : "outline"}
