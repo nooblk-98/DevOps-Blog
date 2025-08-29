@@ -124,10 +124,14 @@
 
   .prose pre {
     @apply bg-muted text-muted-foreground rounded-md p-4;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: pre;
   }
 
   .prose code {
     @apply bg-muted text-muted-foreground rounded px-1 py-0.5;
+    word-break: break-word;
   }
 
   .prose code::before,
@@ -137,5 +141,20 @@
 
   .prose img {
     @apply rounded-lg;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .prose table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@layer utilities {
+  .container-responsive {
+    @apply px-4 sm:px-6 md:px-8;
   }
 }
