@@ -8,8 +8,8 @@ export const Sidebar = () => {
     }`;
 
   return (
-    <div className="hidden border-r bg-muted/40 md:block">
-      <div className="flex h-full max-h-screen flex-col gap-2">
+    <div className="hidden md:block sticky top-0 h-screen border-r bg-muted/40">
+      <div className="flex h-full overflow-y-auto flex-col gap-2">
         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
           <NavLink to="/admin" className="flex items-center gap-2 font-semibold">
             <LayoutDashboard className="h-6 w-6" />

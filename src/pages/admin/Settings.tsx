@@ -55,6 +55,20 @@ export const AdminSettings = () => {
   const [busyBackup, setBusyBackup] = useState(false);
   const [busyRestore, setBusyRestore] = useState(false);
 
+  const sections = [
+    { id: 'site', label: 'Site Identity' },
+    { id: 'banner', label: 'Homepage Banner' },
+    { id: 'about', label: 'About Page' },
+    { id: 'backup', label: 'Backup & Restore' },
+    { id: 'sharing', label: 'Social Sharing' },
+    { id: 'social', label: 'Social Links' },
+  ];
+
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   useEffect(() => {
     const fetchSettings = async () => {
       setLoading(true);
@@ -182,8 +196,20 @@ export const AdminSettings = () => {
       <div className="flex items-center">
         <h1 className="text-lg font-semibold md:text-2xl">Settings</h1>
       </div>
+      {/* Section Nav */}
+      <div className="sticky top-0 z-10 mb-4 -mx-2 px-2 py-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="flex flex-wrap gap-2">
+          {sections.map(s => (
+            <Button key={s.id} type="button" variant="ghost" size="sm" onClick={() => scrollTo(s.id)}>
+              {s.label}
+            </Button>
+          ))}
+        </div>
+      </div>
+
       <form onSubmit={handleSave}>
         <div className="space-y-6">
+          <section id="site">
           <Card>
             <CardHeader>
               <CardTitle>Site Identity</CardTitle>
@@ -220,7 +246,9 @@ export const AdminSettings = () => {
               </div>
             </CardContent>
           </Card>
+          </section>
 
+          <section id="banner">
           <Card>
             <CardHeader>
               <CardTitle>Homepage Banner</CardTitle>
@@ -249,7 +277,9 @@ export const AdminSettings = () => {
               </div>
             </CardContent>
           </Card>
+          </section>
 
+          <section id="about">
           <Card>
             <CardHeader>
               <CardTitle>About Page Content</CardTitle>
@@ -259,7 +289,9 @@ export const AdminSettings = () => {
               <RichTextEditor value={aboutContent} onChange={setAboutContent} placeholder="Write your About Us content here..." />
             </CardContent>
           </Card>
+          </section>
 
+          <section id="backup">
           <Card>
             <CardHeader>
               <CardTitle>Backup & Restore</CardTitle>
@@ -315,7 +347,9 @@ export const AdminSettings = () => {
               </div>
             </CardContent>
           </Card>
+          </section>
 
+          <section id="sharing">
           <Card>
             <CardHeader>
               <CardTitle>Social Sharing</CardTitle>
@@ -332,7 +366,9 @@ export const AdminSettings = () => {
               </div>
             </CardContent>
           </Card>
+          </section>
 
+          <section id="social">
           <Card>
             <CardHeader>
               <CardTitle>Social Media Links</CardTitle>
@@ -362,6 +398,7 @@ export const AdminSettings = () => {
               ))}
             </CardContent>
           </Card>
+          </section>
           
           <div className="flex justify-end">
             <Button type="submit">Save All Settings</Button>

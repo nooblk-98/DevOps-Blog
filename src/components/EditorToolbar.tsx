@@ -37,9 +37,11 @@ import { ImageUploadDialog } from './ImageUploadDialog'
 
 type Props = {
   editor: ReturnType<typeof useEditor>
+  stickyOffset?: number
+  sticky?: boolean
 }
 
-export function EditorToolbar({ editor }: Props) {
+export function EditorToolbar({ editor, stickyOffset = 0, sticky = true }: Props) {
   const [isImageDialogOpen, setIsImageDialogOpen] = useState(false);
   const textColorInputRef = useRef<HTMLInputElement>(null);
   const highlightColorInputRef = useRef<HTMLInputElement>(null);
@@ -85,7 +87,10 @@ export function EditorToolbar({ editor }: Props) {
 
   return (
     <>
-      <div className="sticky top-0 z-10 bg-background border-b border-input p-2 flex flex-wrap items-center gap-1">
+      <div
+        className={(sticky ? 'sticky z-20 ' : '') + 'bg-background border-b border-input p-2 flex flex-wrap items-center gap-1'}
+        style={sticky ? { top: `calc(var(--settings-nav-offset, 0px) + ${stickyOffset}px)` } : undefined}
+      >
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button type="button" variant="ghost" size="sm" className="w-32 justify-between">

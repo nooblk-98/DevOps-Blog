@@ -16,7 +16,14 @@ import { AdminDashboard } from "@/pages/admin/Dashboard";
 import { AdminPosts } from "@/pages/admin/Posts";
 import { AdminCategories } from "@/pages/admin/Categories";
 import { AdminComments } from "@/pages/admin/Comments";
-import { AdminSettings } from "@/pages/admin/Settings";
+import AdminSettingsLayout from "@/pages/admin/settings/Layout";
+import AdminSettingsSite from "@/pages/admin/settings/Site";
+import AdminSettingsBanner from "@/pages/admin/settings/Banner";
+import AdminSettingsAbout from "@/pages/admin/settings/About";
+import AdminSettingsBackup from "@/pages/admin/settings/Backup";
+import AdminSettingsSharing from "@/pages/admin/settings/Sharing";
+import AdminSettingsSocialLinks from "@/pages/admin/settings/SocialLinks";
+import { Navigate } from "react-router-dom";
 import { AdminMedia } from "@/pages/admin/Media";
 import { SettingsProvider } from "@/context/SettingsContext";
 import { CodeCopyEnhancer } from "@/components/CodeCopyEnhancer";
@@ -50,7 +57,15 @@ const App = () => (
                   <Route path="posts" element={<AdminPosts />} />
                   <Route path="categories" element={<AdminCategories />} />
                   <Route path="comments" element={<AdminComments />} />
-                  <Route path="settings" element={<AdminSettings />} />
+                  <Route path="settings" element={<AdminSettingsLayout />}>
+                    <Route index element={<Navigate to="site" replace />} />
+                    <Route path="site" element={<AdminSettingsSite />} />
+                    <Route path="banner" element={<AdminSettingsBanner />} />
+                    <Route path="about" element={<AdminSettingsAbout />} />
+                    <Route path="backup" element={<AdminSettingsBackup />} />
+                    <Route path="sharing" element={<AdminSettingsSharing />} />
+                    <Route path="social" element={<AdminSettingsSocialLinks />} />
+                  </Route>
                   <Route path="media" element={<AdminMedia />} />
                 </Route>
 

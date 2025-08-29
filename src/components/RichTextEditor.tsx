@@ -18,9 +18,11 @@ interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  stickyOffset?: number;
+  toolbarSticky?: boolean;
 }
 
-export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorProps) => {
+export const RichTextEditor = ({ value, onChange, placeholder, stickyOffset = 0, toolbarSticky = true }: RichTextEditorProps) => {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -91,7 +93,7 @@ export const RichTextEditor = ({ value, onChange, placeholder }: RichTextEditorP
 
   return (
     <div className="border border-input rounded-md">
-      {editor && <EditorToolbar editor={editor} />}
+      {editor && <EditorToolbar editor={editor} stickyOffset={stickyOffset} sticky={toolbarSticky} />}
       <EditorContent editor={editor} placeholder={placeholder} />
     </div>
   )
