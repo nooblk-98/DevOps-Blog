@@ -45,6 +45,82 @@ if (!existing) {
   db.run('INSERT INTO users (email, password_hash) VALUES (?,?)', [ADMIN_EMAIL, hash])
 }
 
+// Seed sample data when database is empty
+const postCountRow = db.get('SELECT COUNT(1) as cnt FROM posts')
+if (!postCountRow || postCountRow.cnt === 0) {
+  // Categories
+  const categories = ['DevOps', 'CI/CD', 'Kubernetes']
+  categories.forEach(name => db.run('INSERT INTO categories (name) VALUES (?)', [name]))
+  const catRows = db.all('SELECT * FROM categories')
+  const catByName = Object.fromEntries(catRows.map(c => [c.name, c]))
+
+  // Tags
+  const tags = ['Docker', 'GitHub Actions', 'Helm']
+  tags.forEach(name => db.run('INSERT INTO tags (name) VALUES (?)', [name]))
+  const tagRows = db.all('SELECT * FROM tags')
+  const tagByName = Object.fromEntries(tagRows.map(t => [t.name, t]))
+
+  // Posts
+  const samplePosts = [
+    {
+      title: 'Getting Started with Docker for DevOps',
+      slug: 'getting-started-with-docker',
+      summary: 'Learn the basics of Docker images, containers, and workflows.',
+      image_url: 'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=1600&auto=format&fit=crop',
+      description: '<p>Docker is a key building block in modern DevOps.</p><p>This sample article shows how posts render.</p>',
+      is_pinned: 1,
+      status: 'published',
+      categories: ['DevOps'],
+      tags: ['Docker']
+    },
+    {
+      title: 'CI/CD with GitHub Actions',
+      slug: 'ci-cd-with-github-actions',
+      summary: 'Automate build and deploy pipelines using GitHub Actions.',
+      image_url: 'https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?q=80&w=1600&auto=format&fit=crop',
+      description: '<p>Use workflows to build, test, and deploy your apps.</p>',
+      is_pinned: 0,
+      status: 'published',
+      categories: ['CI/CD'],
+      tags: ['GitHub Actions']
+    },
+    {
+      title: 'Helm Charts for Kubernetes',
+      slug: 'helm-charts-for-kubernetes',
+      summary: 'Package and deploy Kubernetes apps using Helm charts.',
+      image_url: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?q=80&w=1600&auto=format&fit=crop',
+      description: '<p>Helm simplifies Kubernetes application management.</p>',
+      is_pinned: 0,
+      status: 'published',
+      categories: ['Kubernetes'],
+      tags: ['Helm']
+    }
+  ]
+
+  samplePosts.forEach(p => {
+    db.run('INSERT INTO posts (title, description, summary, image_url, slug, is_pinned, status) VALUES (?,?,?,?,?,?,?)', [p.title, p.description, p.summary, p.image_url, p.slug, p.is_pinned, p.status])
+    const row = db.get('SELECT id FROM posts WHERE slug=?', [p.slug])
+    if (row?.id) {
+      p.categories.forEach(name => db.run('INSERT INTO post_categories (post_id, category_id) VALUES (?,?)', [row.id, catByName[name].id]))
+      p.tags.forEach(name => db.run('INSERT INTO post_tags (post_id, tag_id) VALUES (?,?)', [row.id, tagByName[name].id]))
+      db.run('INSERT INTO post_views (post_id, view_count) VALUES (?,?)', [row.id, 0])
+    }
+  })
+
+  // Settings
+  const settings = [
+    { key: 'banner', value: { title: 'DevOps Blog', subtitle: 'Tutorials, Guides, and Best Practices', image_url: 'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?q=80&w=1600&auto=format&fit=crop' } },
+    { key: 'site', value: { name: 'DevOps Blog', logo_url: '' } },
+    { key: 'about_page_content', value: '<p>Welcome to the DevOps blog sample site.</p>' },
+    { key: 'social_sharing', value: { enabled: true } },
+    { key: 'social_links', value: { github: { url: 'https://github.com', enabled: true }, whatsapp: { url: '', enabled: false }, linkedin: { url: 'https://linkedin.com', enabled: true }, facebook: { url: '', enabled: false }, instagram: { url: '', enabled: false } } }
+  ]
+  settings.forEach(s => db.run('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value', [s.key, JSON.stringify(s.value)]))
+}
+
+// Health check
+app.get('/api/health', (_req, res) => res.json({ ok: true }))
+
 // Auth routes
 app.post('/api/auth/signin', (req, res) => {
   const { email, password } = req.body
@@ -226,7 +302,7 @@ app.post('/api/settings', authRequired, (req, res) => {
   if (Array.isArray(entries)) {
     entries.forEach(({ key, value }) => db.run('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value', [key, JSON.stringify(value)]) )
   } else {
-    Object.entries(entries).forEach(([key, value]) => db.run('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value', [key, JSON.stringify(value as any)]) )
+    Object.entries(entries).forEach(([key, value]) => db.run('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value', [key, JSON.stringify(value)]) )
   }
   res.json({ success: true })
 })

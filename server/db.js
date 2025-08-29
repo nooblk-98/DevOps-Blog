@@ -10,7 +10,7 @@ let db = null
 
 async function init() {
   if (!SQL) {
-    SQL = await initSqlJs({ locateFile: (file) => require.resolve('sql.js/dist/sql-wasm.wasm') })
+    SQL = await initSqlJs({ locateFile: (file) => path.join(process.cwd(), 'node_modules', 'sql.js', 'dist', file) })
   }
 
   if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true })
