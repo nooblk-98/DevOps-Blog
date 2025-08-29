@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 interface SiteSettings {
   name: string;
   logo_url: string;
+  favicon_url?: string;
 }
 
 interface BannerSettings {
@@ -35,7 +36,7 @@ interface Settings {
 }
 
 const defaultSettings: Settings = {
-  site: { name: 'DevOps Zone', logo_url: '' },
+  site: { name: 'DevOps Zone', logo_url: '', favicon_url: '' },
   banner: { title: 'Welcome to DevOps Zone', subtitle: 'Your one-stop destination for DevOps tutorials and best practices.', image_url: '' },
   aboutPageContent: '',
   socialSharing: { enabled: true },
@@ -96,6 +97,23 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     fetchSettings();
   }, []);
+
+  // Reflect site identity to document title + favicon
+  useEffect(() => {
+    if (settings.site?.name) {
+      document.title = settings.site.name;
+    }
+    const href = settings.site?.favicon_url || settings.site?.logo_url || ''
+    if (href) {
+      let link = document.querySelector<HTMLLinkElement>("link[rel='icon']") || undefined
+      if (!link) {
+        link = document.createElement('link')
+        link.rel = 'icon'
+        document.head.appendChild(link)
+      }
+      link.href = href
+    }
+  }, [settings.site])
 
   const value = {
     ...settings,

@@ -20,6 +20,7 @@ interface BannerSettings {
 interface SiteSettings {
   name: string;
   logo_url: string;
+  favicon_url?: string;
 }
 
 interface SocialSharingSettings {
@@ -37,7 +38,7 @@ interface SocialLinks {
 export const AdminSettings = () => {
   const { refreshSettings } = useSettings();
   const [bannerSettings, setBannerSettings] = useState<BannerSettings>({ title: '', subtitle: '', image_url: '' });
-  const [siteSettings, setSiteSettings] = useState<SiteSettings>({ name: '', logo_url: '' });
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>({ name: '', logo_url: '', favicon_url: '' });
   const [aboutContent, setAboutContent] = useState<string>('');
   const [socialSharingSettings, setSocialSharingSettings] = useState<SocialSharingSettings>({ enabled: true });
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({
@@ -49,6 +50,8 @@ export const AdminSettings = () => {
   });
   const [loading, setLoading] = useState(true);
   const [isBannerImageDialogOpen, setIsBannerImageDialogOpen] = useState(false);
+  const [isLogoDialogOpen, setIsLogoDialogOpen] = useState(false);
+  const [isFaviconDialogOpen, setIsFaviconDialogOpen] = useState(false);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -125,6 +128,16 @@ export const AdminSettings = () => {
     setSiteSettings(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleLogoInsert = (url: string) => {
+    setSiteSettings(prev => ({ ...prev, logo_url: url }));
+    setIsLogoDialogOpen(false);
+  }
+
+  const handleFaviconInsert = (url: string) => {
+    setSiteSettings(prev => ({ ...prev, favicon_url: url }));
+    setIsFaviconDialogOpen(false);
+  }
+
   const handleSocialSharingToggle = (checked: boolean) => {
     setSocialSharingSettings({ enabled: checked });
   };
@@ -172,7 +185,7 @@ export const AdminSettings = () => {
           <Card>
             <CardHeader>
               <CardTitle>Site Identity</CardTitle>
-              <CardDescription>Manage your site's name and logo.</CardDescription>
+              <CardDescription>Manage your site's name, logo and favicon.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -181,7 +194,27 @@ export const AdminSettings = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="logo_url">Logo URL</Label>
-                <Input id="logo_url" name="logo_url" value={siteSettings.logo_url} onChange={handleSiteChange} placeholder="https://your-domain.com/logo.png" />
+                <div className="flex items-center gap-3">
+                  <Input id="logo_url" name="logo_url" value={siteSettings.logo_url} onChange={handleSiteChange} placeholder="https://your-domain.com/logo.png" />
+                  <Button type="button" variant="outline" onClick={() => setIsLogoDialogOpen(true)}>Select</Button>
+                </div>
+                {siteSettings.logo_url && (
+                  <div className="mt-2">
+                    <img src={siteSettings.logo_url} alt="Logo preview" className="h-10 w-auto" />
+                  </div>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="favicon_url">Favicon URL (32x32)</Label>
+                <div className="flex items-center gap-3">
+                  <Input id="favicon_url" name="favicon_url" value={siteSettings.favicon_url || ''} onChange={handleSiteChange} placeholder="https://your-domain.com/favicon.png" />
+                  <Button type="button" variant="outline" onClick={() => setIsFaviconDialogOpen(true)}>Select</Button>
+                </div>
+                {siteSettings.favicon_url && (
+                  <div className="mt-2">
+                    <img src={siteSettings.favicon_url} alt="Favicon preview" className="h-8 w-8" />
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -278,6 +311,8 @@ export const AdminSettings = () => {
         </div>
       </form>
       <ImageUploadDialog isOpen={isBannerImageDialogOpen} onClose={() => setIsBannerImageDialogOpen(false)} onInsert={handleBannerImageInsert} />
+      <ImageUploadDialog isOpen={isLogoDialogOpen} onClose={() => setIsLogoDialogOpen(false)} onInsert={handleLogoInsert} />
+      <ImageUploadDialog isOpen={isFaviconDialogOpen} onClose={() => setIsFaviconDialogOpen(false)} onInsert={handleFaviconInsert} />
     </>
   );
 };
