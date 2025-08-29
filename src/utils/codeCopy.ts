@@ -17,14 +17,36 @@ export function enhanceCodeBlocksWithCopy(root?: ParentNode) {
     const checkIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
     button.innerHTML = copyIconSVG
     button.addEventListener('click', () => {
-      navigator.clipboard.writeText(code.innerText)
-        .then(() => {
-          button.innerHTML = checkIconSVG
-          setTimeout(() => { button.innerHTML = copyIconSVG }, 1500)
-        })
-        .catch(() => {})
+      const text = code.innerText
+      const onSuccess = () => {
+        button.innerHTML = checkIconSVG
+        setTimeout(() => { button.innerHTML = copyIconSVG }, 1500)
+      }
+      // Prefer modern API on secure contexts
+      if (navigator.clipboard && (window.isSecureContext || location.hostname === 'localhost')) {
+        navigator.clipboard.writeText(text).then(onSuccess).catch(() => fallbackCopy(text, onSuccess))
+      } else {
+        fallbackCopy(text, onSuccess)
+      }
     })
     wrapper.appendChild(button)
   })
 }
 
+function fallbackCopy(text: string, onSuccess: () => void) {
+  try {
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.style.position = 'fixed'
+    textarea.style.left = '-9999px'
+    textarea.style.top = '0'
+    document.body.appendChild(textarea)
+    textarea.focus()
+    textarea.select()
+    const ok = document.execCommand('copy')
+    document.body.removeChild(textarea)
+    if (ok) onSuccess()
+  } catch {
+    // noop
+  }
+}
